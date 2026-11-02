@@ -155,9 +155,9 @@ export default function DonationFlow() {
       const res = await createOrder({
         campaignId: selectedCampaignId,
         amount: finalAmount * 100, // paise
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
+        donorName: data.name,
+        donorEmail: data.email,
+        donorPhone: data.phone,
         pan: data.pan || undefined,
         address: data.address,
         acceptedPrivacyPolicy: data.acceptedPrivacyPolicy,
@@ -187,7 +187,7 @@ export default function DonationFlow() {
       currency: orderData.currency || 'INR',
       name: 'EmpowerHer NGO',
       description: '🔴 TEST MODE — परीक्षण लेनदेन',
-      order_id: orderData.razorpayOrderId || orderData.id,
+      order_id: orderData.orderId,
       prefill: {
         name: donorData?.name,
         email: donorData?.email,
@@ -197,10 +197,10 @@ export default function DonationFlow() {
       handler: async (response) => {
         try {
           const verifyRes = await verifyPayment({
-            razorpay_order_id: response.razorpay_order_id,
-            razorpay_payment_id: response.razorpay_payment_id,
-            razorpay_signature: response.razorpay_signature,
-            donationId: orderData.donationId || orderData._id,
+            razorpayOrderId: response.razorpay_order_id,
+            razorpayPaymentId: response.razorpay_payment_id,
+            razorpaySignature: response.razorpay_signature,
+            donationId: orderData.donationId,
           });
           setCompletedDonation(verifyRes.data?.data);
           setPaymentSuccess(true);
@@ -572,7 +572,7 @@ export default function DonationFlow() {
                     </p>
                   )}
                   <ReceiptDownload
-                    donationId={completedDonation._id}
+                    donationId={completedDonation.donationId}
                     receiptNumber={completedDonation.receiptNumber}
                   />
                   <button

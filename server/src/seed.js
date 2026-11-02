@@ -7,10 +7,7 @@ const Scheme = require('./models/Scheme');
 const Campaign = require('./models/Campaign');
 
 async function seed() {
-  await mongoose.connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  });
+  await mongoose.connect(process.env.MONGODB_URI);
 
   // ─── Users ────────────────────────────────────────────────────────────────
   const adminHash = await bcrypt.hash('Admin@123', 12);

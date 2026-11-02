@@ -97,8 +97,8 @@ export default function SchemeFinder() {
       if (schemeType) params.type = schemeType;
 
       const res = await getSchemes(params);
-      setSchemes(res.data?.data || []);
-      setTotal(res.data?.total || 0);
+      setSchemes(res.data?.data?.schemes || []);
+      setTotal(res.data?.data?.total || 0);
     } catch {
       setError('योजनाएँ लोड नहीं हो सकीं। / Could not load schemes.');
     } finally {

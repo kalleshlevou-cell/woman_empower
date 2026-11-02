@@ -15,7 +15,15 @@ const getSchemes = async (req, res, next) => {
         { description_en: { $regex: q, $options: 'i' } },
       ];
     }
-    if (need) filter.need = need;
+    if (need) {
+      // Accept single value or comma-separated list (e.g. ?need=health,pension)
+      const needValues = need.split(',').map((s) => s.trim()).filter(Boolean);
+      if (needValues.length === 1) {
+        filter.need = needValues[0];
+      } else if (needValues.length > 1) {
+        filter.need = { $in: needValues };
+      }
+    }
     if (district) filter.districts = district;
     if (state) filter.state = state;
     if (category) filter.category = category;

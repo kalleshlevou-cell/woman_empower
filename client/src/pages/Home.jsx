@@ -95,7 +95,7 @@ export default function Home() {
 
   useEffect(() => {
     getSchemes({ limit: 3, status: 'published' })
-      .then((res) => setSchemes(res.data?.data || []))
+      .then((res) => setSchemes(res.data?.data?.schemes || []))
       .catch(() => setSchemes([]))
       .finally(() => setLoadingSchemes(false));
 
