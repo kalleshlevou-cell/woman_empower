@@ -34,8 +34,8 @@ export const adminUpdateCampaign = (id, data) =>
 export const adminGetDonations = (params) =>
   axiosInstance.get('/api/admin/donations', { params });
 
-export const adminExportCsv = () =>
-  axiosInstance.get('/api/admin/donations/export-csv', { responseType: 'blob' });
+export const adminExportCsv = (params) =>
+  axiosInstance.get('/api/admin/donations/export-csv', { params, responseType: 'blob' });
 
 export const adminGetForm10BD = () =>
   axiosInstance.get('/api/admin/donations/form10bd', { responseType: 'blob' });

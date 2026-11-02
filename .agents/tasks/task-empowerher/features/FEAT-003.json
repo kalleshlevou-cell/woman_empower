@@ -1,0 +1,43 @@
+{
+  "id": "FEAT-003",
+  "type": "feat",
+  "description": "Donor account screen and complete Admin CMS (Schemes, Campaigns, Donations report with CSV/Form10BD, Activity Log, Dashboard). Depends on FEAT-001 (backend) and FEAT-002 (client scaffold, AuthContext, shared components). Independent from each other but ordered after FEAT-002 for a clean client foundation.",
+  "status": "completed",
+  "steps": [
+    "Create client/src/pages/DonorAccount.jsx (ProtectedRoute). Three tabs using accessible tab panel (role=tablist, role=tab, aria-selected). Tab 1 'Profile': name, email, phone, PAN masked as AAAAA****A (show only first 5 + last 1 chars). Tab 2 'My Donations': table with columns Date, Campaign, Amount (paise/100 formatted as ₹), Status badge, Download Receipt button (ReceiptDownload component). Fetch GET /api/donations/my. Tab 3 'Saved Schemes': grid of SchemeCard components from GET /api/schemes/bookmarks. Loading state with LoadingSpinner.",
+
+    "Create client/src/pages/AdminDashboard.jsx (AdminRoute). Fetch GET /api/admin/dashboard. Stat cards: Total Donations (count), Total Amount Raised (₹, convert from paise), Active Campaigns, Published Schemes. SVG bar chart (no chart library): render campaign-wise raised amounts as proportional horizontal bars using inline SVG with rect elements, aria-label on each bar. Quick link cards to /admin/schemes, /admin/campaigns, /admin/donations, /admin/logs with icon SVGs.",
+
+    "Create client/src/pages/AdminSchemes.jsx (AdminRoute). Paginated table of all schemes (any status) showing title_hi, need, status, lastCheckedAt, actions. Create/Edit modal with React Hook Form — fields: title_hi, title_en, description_hi, description_en (all _hi fields use font-devanagari class), need(select), districts(multi-select of 9 MP districts), category, eligibilityCriteria builder (add/remove rows of {field, operator, value}), benefits, documents(comma-separated), applicationProcess, officialUrl, lastCheckedAt(date input), helpCentre, status(draft|published). On Create: POST /api/admin/schemes, response shows aiDraft_hi in read-only textarea with yellow 'AI Draft - समीक्षा करें' badge and 'Approve AI Draft' button. 'Approve AI Draft' → POST /api/admin/schemes/:id/approve-draft → badge turns green 'Approved'. Edit: PUT /api/admin/schemes/:id. Delete: confirm dialog → DELETE /api/admin/schemes/:id. Log all mutations via logAdminAction (server-side — just call the API; the server logs automatically).",
+
+    "Create client/src/pages/AdminCampaigns.jsx (AdminRoute). Paginated table of all campaigns. Create/Edit modal: title, description, targetAmount (input in ₹, convert to paise before POST), image upload (file input, multipart/form-data via Axios with Content-Type multipart), startDate, endDate, status. Preview uploaded image from Cloudinary URL in response. Progress bar showing raisedAmount vs targetAmount.",
+
+    "Create client/src/pages/AdminDonations.jsx (AdminRoute). Filterable donation table: date range inputs (from/to), campaign dropdown (populated from GET /api/campaigns), status dropdown (all|pending|success|failed). Pagination. Columns: Receipt No, Date, Donor Name, Email, PAN, Campaign, Amount (₹), Status, Monthly (Yes/No). 'Export CSV' button: GET /api/admin/donations/export-csv with current filters as query params → triggers file download. 'Export Form 10BD' button: GET /api/admin/donations/form10bd → triggers file download. View receipt icon opens /api/donations/:id/receipt in new tab.",
+
+    "Create client/src/pages/AdminLogs.jsx (AdminRoute). Read-only paginated table: Timestamp (formatted DD-MM-YYYY HH:mm), Admin (adminId — show email if possible by joining), Action, Entity Type, Entity ID, Details (rendered as <pre className='text-xs overflow-auto max-h-20'>{JSON.stringify(details, null, 2)}</pre>). Fetch GET /api/admin/logs.",
+
+    "Add shared admin navigation: create client/src/components/AdminSidebar.jsx — vertical nav for admin pages (Dashboard, Schemes, Campaigns, Donations, Logs) using NavLink with active styling. Include in all admin pages as a persistent left sidebar."
+  ],
+  "acceptance_criteria": [
+    "/account shows donor profile with masked PAN, donation history, and saved schemes",
+    "ReceiptDownload button on DonorAccount triggers PDF download",
+    "AdminDashboard shows correct stat counts matching seed data",
+    "AdminSchemes: create a new scheme → AI draft badge visible → approve draft → publish → scheme appears on public /schemes page",
+    "AdminCampaigns: create a campaign with image → appears on homepage campaign cards",
+    "AdminDonations: Export CSV download opens file with headers: Receipt No,Date,Donor Name,Email,Phone,PAN,Campaign,Amount (INR),Status,Monthly",
+    "AdminDonations: Export Form 10BD download opens file with EXACT headers: Sl. No.,Name of Donor,Address,PAN/Aadhaar,Amount,Mode of Receipt,Nature of Receipt,Date",
+    "AdminLogs: creating/editing a scheme from AdminSchemes creates a visible log entry in AdminLogs",
+    "All admin pages return 403 when accessed with donor-role JWT",
+    "FEAT status updated to completed in FEAT-003.json"
+  ],
+  "verification": [
+    "Login as donor@test.com → navigate to /account → all three tabs render",
+    "Login as admin@empowerher.org → navigate to /admin → stat cards show numbers",
+    "Admin: create scheme 'Test Scheme' → AI draft badge appears → click Approve → badge turns green → set status published → navigate to /schemes → Test Scheme appears",
+    "Admin: /admin/donations → click Export CSV → downloaded file opens in text editor, first line is: Receipt No,Date,Donor Name,Email,Phone,PAN,Campaign,Amount (INR),Status,Monthly",
+    "Admin: /admin/donations → click Export Form 10BD → first line is: Sl. No.,Name of Donor,Address,PAN/Aadhaar,Amount,Mode of Receipt,Nature of Receipt,Date",
+    "Navigate to /admin with donor JWT in localStorage → redirected to / or shown 403"
+  ],
+  "blocked_reason": null,
+  "findings": "1. All 7 steps implemented: DonorAccount.jsx (3-tab accessible panel with masked PAN AAAAA****A), AdminDashboard.jsx (stat cards + SVG bar chart + quick links), AdminSchemes.jsx (CRUD modal with React Hook Form + Zod, eligibility criteria builder, AI draft badge — yellow when aiDraftApproved===false, green after approve-draft API call), AdminCampaigns.jsx (multipart form-data image upload, progress bar with aria attributes), AdminDonations.jsx (filterable table, Export CSV with filter params, Export Form 10BD, view receipt), AdminLogs.jsx (read-only paginated table with DD-MM-YYYY HH:mm timestamps and JSON details pre-block), AdminSidebar.jsx (NavLink with active styling, present on all admin pages). 2. AdminRoute in App.jsx redirects to / (not /login) for authenticated non-admin users — constraint enforced. 3. CSV export (adminApi.js) updated to accept params object so current filters are forwarded to the streaming endpoint. 4. adminApi.js adminExportCsv now accepts params for filter-aware CSV export. 5. App.jsx stub functions replaced with real page imports. 6. Build verified: npm run build exits 0, 103 modules, no errors. 7. All admin mutations in AdminSchemes/AdminCampaigns call the API directly — server-side logAdminAction fires automatically per the backend implementation. 8. WCAG: role=tablist/tab/aria-selected on DonorAccount tabs; role=progressbar/aria-valuenow/aria-valuemin/aria-valuemax on campaign progress bars; role=dialog/aria-modal on all modals; role=alert on all error messages; aria-label on receipt view links and approve buttons."
+}

@@ -6,29 +6,15 @@ import Home from './pages/Home';
 import SchemeFinder from './pages/SchemeFinder';
 import SchemeDetail from './pages/SchemeDetail';
 import DonationFlow from './pages/DonationFlow';
+import DonorAccount from './pages/DonorAccount';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminSchemes from './pages/AdminSchemes';
+import AdminCampaigns from './pages/AdminCampaigns';
+import AdminDonations from './pages/AdminDonations';
+import AdminLogs from './pages/AdminLogs';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import NotFound from './pages/NotFound';
-
-// Lazy stubs for admin/account pages (to be implemented in later FEATs)
-function DonorAccount() {
-  return <main role="main" className="p-8 text-center"><h1>My Account</h1></main>;
-}
-function AdminDashboard() {
-  return <main role="main" className="p-8 text-center"><h1>Admin Dashboard</h1></main>;
-}
-function AdminSchemes() {
-  return <main role="main" className="p-8 text-center"><h1>Admin Schemes</h1></main>;
-}
-function AdminCampaigns() {
-  return <main role="main" className="p-8 text-center"><h1>Admin Campaigns</h1></main>;
-}
-function AdminDonations() {
-  return <main role="main" className="p-8 text-center"><h1>Admin Donations</h1></main>;
-}
-function AdminLogs() {
-  return <main role="main" className="p-8 text-center"><h1>Admin Logs</h1></main>;
-}
 
 function ProtectedRoute({ children }) {
   const { token, loading } = useAuth();
