@@ -84,7 +84,7 @@ export default function SchemeCard({ scheme, lang = 'hi', showDraftBadge = false
 
       <Link
         to={`/schemes/${scheme._id}`}
-        className="mt-auto inline-block text-sm font-medium text-secondary hover:underline"
+        className="mt-auto inline-block text-sm font-medium text-secondary hover:underline focus:outline-none focus:ring-2 focus:ring-secondary rounded"
         aria-label={`View details for ${title}`}
       >
         विवरण देखें / View Details →

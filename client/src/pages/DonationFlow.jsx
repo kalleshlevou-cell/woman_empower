@@ -363,7 +363,7 @@ export default function DonationFlow() {
               <button
                 onClick={handleStep1Next}
                 disabled={!selectedCampaignId || !finalAmount}
-                className="w-full bg-secondary text-white py-3 rounded font-semibold hover:bg-green-700 disabled:opacity-50 transition-colors"
+                className="w-full bg-secondary text-white py-3 rounded font-semibold hover:bg-green-700 disabled:opacity-50 transition-colors focus:outline-none focus:ring-2 focus:ring-secondary"
               >
                 आगे बढ़ें / Continue
               </button>

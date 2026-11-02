@@ -59,7 +59,7 @@ export default function CampaignCard({ campaign }) {
 
       <Link
         to={`/donate/${campaign._id}`}
-        className="mt-auto block text-center bg-secondary text-white py-2 rounded text-sm font-medium hover:bg-green-700 transition-colors"
+        className="mt-auto block text-center bg-secondary text-white py-2 rounded text-sm font-medium hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-secondary"
       >
         दान करें / Donate Now
       </Link>

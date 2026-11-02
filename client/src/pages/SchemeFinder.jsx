@@ -255,7 +255,7 @@ export default function SchemeFinder() {
                 <button
                   onClick={() => setShowEligibility((s) => !s)}
                   aria-expanded={showEligibility}
-                  className="flex items-center justify-between w-full text-sm font-semibold text-primaryText"
+                  className="flex items-center justify-between w-full text-sm font-semibold text-primaryText focus:outline-none focus:ring-2 focus:ring-primaryText rounded"
                 >
                   <span>पात्रता जाँचें / Check Eligibility</span>
                   <span>{showEligibility ? '▲' : '▼'}</span>
@@ -362,7 +362,8 @@ export default function SchemeFinder() {
               {/* Helpline button */}
               <button
                 onClick={() => setShowHelpline(true)}
-                className="w-full bg-primary text-white py-2 rounded text-sm font-semibold hover:bg-yellow-500 transition-colors"
+                aria-label="Request helpline callback"
+                className="w-full bg-secondary text-white py-2 rounded text-sm font-semibold hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-secondary"
               >
                 📞 सहायता कॉलबैक / Helpline Call-back
               </button>
@@ -402,7 +403,7 @@ export default function SchemeFinder() {
                       <button
                         onClick={() => setPage((p) => Math.max(1, p - 1))}
                         disabled={page === 1}
-                        className="px-3 py-1 rounded border text-sm disabled:opacity-40 hover:bg-gray-50"
+                        className="px-3 py-1 rounded border text-sm disabled:opacity-40 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primaryText"
                       >
                         ← पिछला
                       </button>
@@ -412,7 +413,7 @@ export default function SchemeFinder() {
                       <button
                         onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                         disabled={page === totalPages}
-                        className="px-3 py-1 rounded border text-sm disabled:opacity-40 hover:bg-gray-50"
+                        className="px-3 py-1 rounded border text-sm disabled:opacity-40 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primaryText"
                       >
                         अगला →
                       </button>
@@ -479,14 +480,15 @@ export default function SchemeFinder() {
                   <button
                     type="submit"
                     disabled={helplineSubmitting}
-                    className="flex-1 bg-secondary text-white py-2 rounded text-sm font-semibold hover:bg-green-700 disabled:opacity-60"
+                    className="flex-1 bg-secondary text-white py-2 rounded text-sm font-semibold hover:bg-green-700 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-secondary"
                   >
                     {helplineSubmitting ? '…' : 'भेजें / Submit'}
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowHelpline(false)}
-                    className="px-4 py-2 rounded border border-gray-300 text-sm text-gray-700 hover:bg-gray-50"
+                    aria-label="Close helpline modal"
+                    className="px-4 py-2 rounded border border-gray-300 text-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400"
                   >
                     बंद / Close
                   </button>

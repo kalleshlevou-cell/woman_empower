@@ -126,14 +126,14 @@ function CampaignModal({ campaign, onClose, onSaved }) {
       role="dialog"
       aria-modal="true"
       aria-label={isEdit ? 'Edit campaign' : 'Create campaign'}
-      className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 overflow-y-auto py-8 px-4"
+      className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 overflow-y-auto sm:py-8 sm:px-4"
     >
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-lg">
+      <div className="bg-white sm:rounded-lg shadow-xl w-full sm:max-w-lg min-h-screen sm:min-h-0">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">
             {isEdit ? 'अभियान संपादित करें / Edit Campaign' : 'नया अभियान / Create Campaign'}
           </h2>
-          <button type="button" onClick={onClose} aria-label="Close" className="text-gray-400 hover:text-gray-600 text-2xl leading-none">
+          <button type="button" onClick={onClose} aria-label="Close modal" className="text-gray-400 hover:text-gray-600 text-2xl leading-none focus:outline-none focus:ring-2 focus:ring-gray-400 rounded">
             &times;
           </button>
         </div>

@@ -53,14 +53,14 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 to={link.href}
-                className="flex flex-col items-center leading-none hover:text-primaryText transition-colors"
+                className="flex flex-col items-center leading-none hover:text-primaryText transition-colors focus:outline-none focus:ring-2 focus:ring-primaryText rounded"
               >
                 <span className="text-sm font-medium text-primaryText">{link.hi}</span>
                 <span className="text-xs text-gray-400">{link.en}</span>
               </Link>
             ))}
             {isAdmin() && (
-              <Link to="/admin" className="text-sm font-medium text-primaryText hover:underline">
+              <Link to="/admin" className="text-sm font-medium text-primaryText hover:underline focus:outline-none focus:ring-2 focus:ring-primaryText rounded">
                 Admin
               </Link>
             )}
@@ -71,19 +71,19 @@ export default function Navbar() {
             {/* Language toggle uses LanguageContext, not local state */}
             <button
               onClick={toggleLang}
-              className="px-3 py-1 rounded border border-primaryText text-primaryText text-sm font-semibold hover:bg-primary hover:text-white transition-colors"
+              className="px-3 py-1 rounded border border-primaryText text-primaryText text-sm font-semibold hover:bg-primary hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-primaryText"
               aria-label={`Switch to ${lang === 'hi' ? 'English' : 'Hindi'}`}
             >
               {lang === 'hi' ? 'EN' : 'HI'}
             </button>
             {user ? (
               <div className="flex items-center gap-2">
-                <Link to="/account" className="text-sm text-primaryText hover:underline">
+                <Link to="/account" className="text-sm text-primaryText hover:underline focus:outline-none focus:ring-2 focus:ring-primaryText rounded">
                   {user.name?.split(' ')[0]}
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="text-sm text-gray-500 hover:text-red-600 transition-colors"
+                  className="text-sm text-gray-500 hover:text-red-600 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
                 >
                   Logout
                 </button>
@@ -91,7 +91,7 @@ export default function Navbar() {
             ) : (
               <Link
                 to="/login"
-                className="px-4 py-1.5 bg-secondary text-white rounded text-sm font-medium hover:bg-green-700 transition-colors"
+                className="px-4 py-1.5 bg-secondary text-white rounded text-sm font-medium hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-secondary"
               >
                 Login
               </Link>
@@ -116,34 +116,67 @@ export default function Navbar() {
           </button>
         </div>
 
-        {/* Mobile menu */}
+        {/* Mobile menu — full-width overlay */}
         {menuOpen && (
-          <div id="mobile-menu" className="sm:hidden py-3 border-t border-gray-100">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                to={link.href}
-                onClick={() => setMenuOpen(false)}
-                className="flex items-center gap-2 px-2 py-2 hover:bg-gray-50 rounded"
-              >
-                <span className="text-sm font-medium text-primaryText">{link.hi}</span>
-                <span className="text-xs text-gray-400">/ {link.en}</span>
-              </Link>
-            ))}
-            <div className="flex items-center gap-3 px-2 pt-3 border-t border-gray-100 mt-2">
-              <button
-                onClick={() => { toggleLang(); setMenuOpen(false); }}
-                className="px-3 py-1 rounded border border-primaryText text-primaryText text-sm font-semibold"
-              >
-                {lang === 'hi' ? 'EN' : 'HI'}
-              </button>
-              {user ? (
-                <button onClick={handleLogout} className="text-sm text-red-600">Logout</button>
-              ) : (
-                <Link to="/login" onClick={() => setMenuOpen(false)} className="text-sm text-secondary font-medium">
-                  Login
+          <div
+            id="mobile-menu"
+            className="sm:hidden fixed inset-0 top-14 z-40 bg-white border-t border-gray-100 shadow-lg overflow-y-auto"
+          >
+            <div className="px-4 py-4 space-y-1">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  to={link.href}
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-2 px-3 py-3 hover:bg-gray-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-primaryText"
+                >
+                  <span className="text-base font-medium text-primaryText">{link.hi}</span>
+                  <span className="text-xs text-gray-400">/ {link.en}</span>
+                </Link>
+              ))}
+              {isAdmin() && (
+                <Link
+                  to="/admin"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center px-3 py-3 hover:bg-gray-50 rounded-lg text-sm font-medium text-primaryText focus:outline-none focus:ring-2 focus:ring-primaryText"
+                >
+                  Admin
                 </Link>
               )}
+              <div className="flex items-center gap-3 px-3 pt-4 border-t border-gray-100 mt-2">
+                <button
+                  onClick={() => { toggleLang(); setMenuOpen(false); }}
+                  aria-label={`Switch to ${lang === 'hi' ? 'English' : 'Hindi'}`}
+                  className="px-3 py-1.5 rounded border border-primaryText text-primaryText text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primaryText"
+                >
+                  {lang === 'hi' ? 'EN' : 'HI'}
+                </button>
+                {user ? (
+                  <>
+                    <Link
+                      to="/account"
+                      onClick={() => setMenuOpen(false)}
+                      className="text-sm text-primaryText hover:underline focus:outline-none focus:ring-2 focus:ring-primaryText rounded"
+                    >
+                      {user.name?.split(' ')[0]}
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="text-sm text-red-600 hover:underline focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
+                    >
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <Link
+                    to="/login"
+                    onClick={() => setMenuOpen(false)}
+                    className="text-sm text-secondary font-medium focus:outline-none focus:ring-2 focus:ring-secondary rounded"
+                  >
+                    Login
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
         )}

@@ -102,17 +102,23 @@ export default function SchemeDetail() {
             </div>
           )}
 
-          {/* Title */}
+          {/* Title — uses lang from context */}
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">{titleHi}</h1>
-            <p className="text-lg text-gray-500 mt-1">{titleEn}</p>
+            <h1 className="text-2xl font-bold text-gray-900">
+              {lang === 'hi' ? titleHi : titleEn}
+            </h1>
+            <p className="text-lg text-gray-500 mt-1">
+              {lang === 'hi' ? titleEn : titleHi}
+            </p>
           </div>
 
           {/* HI / EN tabs for description */}
-          <div className="flex gap-2 mb-4">
+          <div role="tablist" aria-label="Description language" className="flex gap-2 mb-4">
             <button
+              role="tab"
+              aria-selected={contentTab === 'hi'}
               onClick={() => setContentTab('hi')}
-              className={`px-4 py-1.5 rounded text-sm font-medium border transition-colors ${
+              className={`px-4 py-1.5 rounded text-sm font-medium border transition-colors focus:outline-none focus:ring-2 focus:ring-secondary ${
                 contentTab === 'hi'
                   ? 'bg-secondary text-white border-secondary'
                   : 'border-gray-300 text-gray-600 hover:bg-gray-50'
@@ -121,8 +127,10 @@ export default function SchemeDetail() {
               हिंदी
             </button>
             <button
+              role="tab"
+              aria-selected={contentTab === 'en'}
               onClick={() => setContentTab('en')}
-              className={`px-4 py-1.5 rounded text-sm font-medium border transition-colors ${
+              className={`px-4 py-1.5 rounded text-sm font-medium border transition-colors focus:outline-none focus:ring-2 focus:ring-secondary ${
                 contentTab === 'en'
                   ? 'bg-secondary text-white border-secondary'
                   : 'border-gray-300 text-gray-600 hover:bg-gray-50'
@@ -243,7 +251,8 @@ export default function SchemeDetail() {
             <button
               onClick={handleBookmark}
               disabled={bookmarkLoading}
-              className={`flex items-center gap-2 px-5 py-2 rounded font-medium text-sm transition-colors ${
+              aria-label={bookmarked ? 'Remove bookmark for this scheme' : 'Save this scheme to bookmarks'}
+              className={`flex items-center gap-2 px-5 py-2 rounded font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-secondary ${
                 bookmarked
                   ? 'bg-secondary text-white hover:bg-green-700'
                   : 'border border-secondary text-secondary hover:bg-green-50'

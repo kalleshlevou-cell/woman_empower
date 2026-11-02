@@ -179,7 +179,7 @@ export default function Home() {
                     navigate(`/schemes?need=${n.key}`);
                   }}
                   aria-pressed={selectedNeed === n.key}
-                  className={`flex flex-col items-center justify-center p-3 rounded-lg border-2 transition-all cursor-pointer
+                  className={`flex flex-col items-center justify-center p-3 rounded-lg border-2 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-secondary
                     ${selectedNeed === n.key
                       ? 'border-primaryText bg-yellow-50'
                       : 'border-gray-200 hover:border-primaryText hover:bg-yellow-50'
@@ -213,7 +213,7 @@ export default function Home() {
 
               <button
                 onClick={handleSearch}
-                className="mt-5 sm:mt-0 px-8 py-2 bg-secondary text-white rounded font-semibold hover:bg-green-700 transition-colors"
+                className="mt-5 sm:mt-0 px-8 py-2 bg-secondary text-white rounded font-semibold hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-secondary"
               >
                 खोजें / Search
               </button>
