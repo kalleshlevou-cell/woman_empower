@@ -1,0 +1,13 @@
+{
+  "name": "empowerher",
+  "version": "1.0.0",
+  "description": "EmpowerHer - NGO Donations & Women's Welfare Portal",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "install:all": "npm i && npm i --prefix client && npm i --prefix server"
+  },
+  "dependencies": {
+    "concurrently": "8.2.2"
+  }
+}
