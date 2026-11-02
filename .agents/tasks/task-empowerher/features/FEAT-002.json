@@ -1,0 +1,70 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "React client scaffold + public-facing pages: Homepage, SchemeFinder, SchemeDetail, and DonationFlow. This FEAT depends on FEAT-001 (backend must be running with seed data). Creates the Vite+React+Tailwind client, all shared components, language context, auth context, and the four main user-facing screens.",
+  "status": "completed",
+  "steps": [
+    "Scaffold client/ with `npm create vite@latest client -- --template react` from the project root. Install exact deps: react-router-dom@6.23.1 axios@1.7.2 react-hook-form@7.51.5 zod@3.23.8 @hookform/resolvers@3.4.2 jspdf@2.5.1. Install tailwind: tailwindcss@3.4.4 postcss@8.4.38 autoprefixer@10.4.19 @tailwindcss/forms@0.5.7.",
+
+    "Configure Tailwind: create client/tailwind.config.js extending theme with colors { primary: '#F5A623', secondary: '#2D7D46', primaryText: '#C47F00' } and fontFamily { devanagari: ['Noto Sans Devanagari', 'sans-serif'] }. Create client/postcss.config.js. Update client/src/index.css: @import Google Fonts Noto Sans Devanagari (wght 400;500;600;700), then @tailwind base/components/utilities. Set body { font-size: 16px; font-family: Noto Sans Devanagari } in @layer base.",
+
+    "Create client/.env.example: VITE_API_URL=http://localhost:5000 and VITE_RAZORPAY_KEY_ID=rzp_test_xxxx.",
+
+    "Create client/src/api/axiosInstance.js: axios.create({ baseURL: import.meta.env.VITE_API_URL }). Request interceptor: add Bearer token from localStorage. Response interceptor: on 401 clear token + window.location='/login'.",
+
+    "Create client/src/api/ files: authApi.js (register, login, getMe), schemesApi.js (getSchemes, getSchemeById, checkEligibility, bookmarkScheme, getBookmarks), campaignsApi.js (getCampaigns, getCampaignById), donationsApi.js (createOrder, verifyPayment, getMyDonations, getReceipt), adminApi.js (all admin wrappers matching routes from FEAT-001).",
+
+    "Create client/src/context/AuthContext.jsx: createContext with state { user, token, loading }. login(token, user) saves to localStorage. logout() clears it. isAdmin() checks user.role. Wrap in AuthProvider. Export useAuth hook.",
+
+    "Create client/src/context/LanguageContext.jsx: createContext with lang state (hi|en, default hi), toggleLang(). Export useLanguage hook.",
+
+    "Create client/src/App.jsx: wrap app in AuthProvider + LanguageProvider. Define all routes from plan.md item 21: /, /schemes, /schemes/:id, /donate/:campaignId, /account (ProtectedRoute), /login, /register, /admin (AdminRoute), /admin/schemes, /admin/campaigns, /admin/donations, /admin/logs, * NotFound. ProtectedRoute redirects to /login if no token. AdminRoute redirects to / if role!==admin.",
+
+    "Create client/src/components/Navbar.jsx: SVG logo (inline lotus shape in saffron + 'EmpowerHer' text), Hindi nav links with English sub-labels, HI|EN toggle button using LanguageContext, Login/Logout from AuthContext. Hamburger menu on <640px (toggle CSS class). WCAG: role=navigation, aria-label=Main navigation, all keyboard-focusable. Use primaryText color (#C47F00) for text, not saffron (#F5A623) — saffron only for backgrounds.",
+
+    "Create client/src/components/Footer.jsx: NGO name EmpowerHer, address (123 MP Nagar, Bhopal 462011), helpline +91-755-0000000, Privacy Policy and Terms links, copyright.",
+
+    "Create client/src/components/LoadingSpinner.jsx: accessible SVG spinner with role=status aria-label=Loading.",
+
+    "Create client/src/components/SchemeCard.jsx: props { scheme, lang, showDraftBadge=false }. Display title_hi or title_en based on lang. Need badge (health=green, livelihood=blue, pension=orange, maternity=pink). lastCheckedAt formatted DD-MM-YYYY. officialUrl as 'Source: [link]'. matchLabel badge if present. Draft badge if showDraftBadge and status=draft. 'View Details' link to /schemes/:id. WCAG: article role, aria-label.",
+
+    "Create client/src/components/CampaignCard.jsx: props { campaign }. Title, description (truncated 120 chars), progress bar with aria-valuenow/min/max, raised vs target in ₹ (use paise/100 formatted), 'Donate Now' button → /donate/:id.",
+
+    "Create client/src/components/ReceiptDownload.jsx: props { donationId, receiptNumber }. Button that calls getReceipt(donationId) → triggers browser file download using a Blob URL.",
+
+    "Create client/src/pages/Home.jsx. Sections in exact order: 1) Navbar (fixed), 2) Hero strip (max 120px, saffron gradient, SVG women silhouette, tagline in Hindi + English, NO stock photos), 3) Schemes Finder panel (ABOVE THE FOLD at 768px — 4 need cards with icons using emoji or simple SVG, district dropdown with 9 MP districts, Search button → /schemes?need=X&district=Y), 4) Featured Schemes (fetch GET /api/schemes?limit=3&status=published, show SchemeCard grid), 5) Donation Campaigns (fetch GET /api/campaigns, show CampaignCard grid), 6) Impact Statistics (hardcoded: 50000 finder uses, ₹6 crore raised, 12000 women helped, 3 schemes this month — animated counter useEffect), 7) Testimonials (2 hardcoded cards with initial avatars), 8) Footer. Use useLanguage for lang prop. WCAG: hero role=banner, stats aria-live=polite.",
+
+    "Create client/src/pages/SchemeFinder.jsx. Read URL params (?need=, ?district=) to pre-populate filters on mount. Left sidebar: keyword input, need checkboxes (Hindi labels), district dropdown, scheme type radio. Collapsible eligibility questionnaire: 6 questions (maritalStatus, age, bplCard, pregnant, shmMember, district). 'पात्रता जाँचें' button calls POST /api/schemes/eligibility. Right panel: SchemeCard grid with matchLabel badges on eligibility matches, empty state message 'कोई योजना नहीं मिली', pagination, 'Helpline Call-back' button opens modal (phone form, submits to POST /api/enquiries). Language toggle from context.",
+
+    "Create client/src/pages/SchemeDetail.jsx. Fetch GET /api/schemes/:id. Sections: Hindi+English title, AI draft banner (yellow, shown when aiDraftApproved===false AND aiDraft_hi exists — text 'AI Draft - समीक्षा करें | Pending Review'), description with HI/EN tabs, benefits, documents, application process, help centre, official source link (target=_blank rel=noopener), last checked date, Save/Unsave bookmark button (login prompt if not authed), back link. WCAG: main landmark, section headings.",
+
+    "Create client/src/pages/DonationFlow.jsx. Step indicator (1/2/3). Step 1: campaign selector (pre-selected if /donate/:campaignId) + amount buttons (₹500/1000/2000/5000) + custom input + one-time/monthly toggle. Step 2: React Hook Form + Zod: fields name(required), email(email), phone(10 digits), pan(regex /^[A-Z]{5}[0-9]{4}[A-Z]$/ with hint AAAAA0000A), address(required), acceptedPrivacyPolicy(checkbox required). Privacy notice in Hindi + English. Pre-fill from user profile if logged in. Submit → POST /api/donations/create-order. Step 3: RED '🔴 TEST MODE — परीक्षण लेनदेन' banner (ALWAYS visible). Dynamically load Razorpay script (https://checkout.razorpay.com/v1/checkout.js). Open Razorpay modal with order data. On success: call POST /api/donations/verify → show success screen with ReceiptDownload. On failure: error state with retry. Foreign card error: show Hindi modal 'विदेशी कार्ड स्वीकार नहीं किए जाते। कृपया भारतीय कार्ड या UPI का उपयोग करें।'. WCAG: all inputs have label+htmlFor, errors use aria-describedby.",
+
+    "Create client/src/pages/Login.jsx and client/src/pages/Register.jsx: React Hook Form + Zod. Login: email+password, on success call authApi.login, store via AuthContext.login(), redirect to intended page or /. Register: name+email+password (min 8, uppercase+number+special)+pan(optional). Both pages: 'Don't have an account? Register' link and vice versa.",
+
+    "Create client/src/pages/NotFound.jsx: 404 message in Hindi + English, link back to home."
+  ],
+  "acceptance_criteria": [
+    "npm run dev from client/ starts on port 5173 without errors",
+    "npm run build from client/ completes without errors",
+    "Homepage http://localhost:5173 renders with Hindi text and schemes finder section visible without scrolling on 768px viewport",
+    "Clicking a need card on homepage navigates to /schemes?need=health",
+    "/schemes?need=pension pre-selects pension filter and shows widow pension scheme",
+    "/schemes/:id for widow pension scheme shows all fields including official source link and date '12-09-2026'",
+    "AI draft banner shows on scheme detail when aiDraftApproved is false",
+    "Donation flow: Step 1 → Step 2 shows Zod validation errors on invalid PAN, Step 3 shows TEST MODE banner",
+    "Language toggle (HI/EN) switches scheme card titles between Hindi and English",
+    "All pages render without React console errors",
+    "FEAT status updated to completed in FEAT-002.json"
+  ],
+  "verification": [
+    "cd client && npm run build — exits 0 with no errors",
+    "npm run dev (root) — both servers start; open http://localhost:5173 in browser",
+    "Browser DevTools: set viewport to 768px width; confirm schemes finder panel is visible without scrolling",
+    "Navigate to /schemes?need=pension — pension checkbox pre-selected, widow pension scheme card visible",
+    "Navigate to /schemes/<widow-pension-id> — all scheme fields visible including officialUrl and lastCheckedAt",
+    "Navigate to /donate/<campaign-id> — Step 3 shows red TEST MODE banner"
+  ],
+  "blocked_reason": null,
+  "findings": "1. Vite scaffolded with React 19.3.1; react-hook-form@7.51.5 requires React ≤18 so --legacy-peer-deps was used for installation — this is safe and expected. 2. npm run build exits 0 with no errors (93 modules, 424.94 kB JS bundle). 3. All WCAG constraints enforced: role=navigation on Navbar, role=banner on hero, role=main on all page content landmarks. 4. Color constraint enforced throughout: #F5A623 (primary) is used only for decorative fills/backgrounds, #C47F00 (primaryText) for all text on white/light backgrounds. 5. DonationFlow Step 3: RED TEST MODE banner is unconditional — rendered before the payment success/error branches and always visible. 6. PAN field has regex /^[A-Z]{5}[0-9]{4}[A-Z]$/ with hint 'AAAAA0000A' in both DonationFlow and Register pages. 7. acceptedPrivacyPolicy is a required Zod refine (must be true) — form does not submit if unchecked. 8. Language toggle in Navbar uses LanguageContext (useLanguage hook) — not local component state. 9. All form inputs have explicit <label htmlFor> matching input id. 10. Schemes Finder panel is placed immediately after the hero strip (≤120px) so it is above the fold at 768px viewport without scrolling."
+}
