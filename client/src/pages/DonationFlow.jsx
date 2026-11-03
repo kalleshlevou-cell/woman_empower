@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -7,39 +7,38 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ReceiptDownload from '../components/ReceiptDownload';
-import { getCampaigns, getCampaignById } from '../api/campaignsApi';
+import { getCampaigns } from '../api/campaignsApi';
 import { createOrder, verifyPayment } from '../api/donationsApi';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const PAN_REGEX = /^[A-Z]{5}[0-9]{4}[A-Z]$/;
 
 const donorSchema = z.object({
-  name: z.string().min(1, 'नाम आवश्यक है / Name is required'),
-  email: z.string().email('वैध ईमेल दर्ज करें / Enter valid email'),
-  phone: z
-    .string()
-    .regex(/^\d{10}$/, '10 अंकों का मोबाइल नंबर / 10-digit mobile number'),
+  name: z.string().min(1, 'Name is required'),
+  email: z.string().email('Enter a valid email'),
+  phone: z.string().regex(/^\d{10}$/, '10-digit mobile number required'),
   pan: z
     .string()
     .transform((v) => v.toUpperCase())
     .pipe(z.string().regex(PAN_REGEX, 'PAN format: AAAAA0000A'))
     .or(z.literal(''))
     .optional(),
-  address: z.string().min(1, 'पता आवश्यक है / Address is required'),
+  address: z.string().min(1, 'Address is required'),
   acceptedPrivacyPolicy: z
     .boolean()
-    .refine((v) => v === true, {
-      message: 'गोपनीयता नीति स्वीकार करना अनिवार्य है / Privacy policy acceptance is required',
-    }),
+    .refine((v) => v === true, { message: 'You must accept the privacy policy.' }),
 });
 
 const PRESET_AMOUNTS = [500, 1000, 2000, 5000];
 
 function StepIndicator({ step }) {
+  const { lang } = useLanguage();
+  const t = (en, hi) => (lang === 'hi' ? hi : en);
   const steps = [
-    { num: 1, hi: 'अभियान', en: 'Campaign' },
-    { num: 2, hi: 'विवरण', en: 'Details' },
-    { num: 3, hi: 'भुगतान', en: 'Payment' },
+    { num: 1, label: t('Campaign', '\u0905\u092d\u093f\u092f\u093e\u0928') },
+    { num: 2, label: t('Details', '\u0935\u093f\u0935\u0930\u0923') },
+    { num: 3, label: t('Payment', '\u092d\u0941\u0917\u0924\u093e\u0928') },
   ];
   return (
     <div className="flex items-center justify-center mb-8 gap-0" role="list" aria-label="Donation steps">
@@ -55,14 +54,14 @@ function StepIndicator({ step }) {
             }`}
             aria-current={step === s.num ? 'step' : undefined}
           >
-            {step > s.num ? '✓' : s.num}
+            {step > s.num ? '\u2713' : s.num}
           </div>
-          <div className="flex flex-col ml-1 mr-1">
-            <span className="text-xs font-medium text-gray-700 leading-none">{s.hi}</span>
-            <span className="text-xs text-gray-400 leading-none">{s.en}</span>
-          </div>
+          <span className="ml-1 mr-1 text-xs font-medium text-gray-700">{s.label}</span>
           {i < steps.length - 1 && (
-            <div className={`h-0.5 w-8 ${step > s.num ? 'bg-green-500' : 'bg-gray-200'}`} aria-hidden="true" />
+            <div
+              className={`h-0.5 w-8 ${step > s.num ? 'bg-green-500' : 'bg-gray-200'}`}
+              aria-hidden="true"
+            />
           )}
         </div>
       ))}
@@ -84,6 +83,8 @@ function loadRazorpayScript() {
 export default function DonationFlow() {
   const { campaignId } = useParams();
   const { user } = useAuth();
+  const { lang } = useLanguage();
+  const t = (en, hi) => (lang === 'hi' ? hi : en);
   const navigate = useNavigate();
 
   const [step, setStep] = useState(1);
@@ -94,7 +95,6 @@ export default function DonationFlow() {
   const [isMonthly, setIsMonthly] = useState(false);
   const [loadingCampaigns, setLoadingCampaigns] = useState(true);
 
-  // Step 3 state
   const [orderData, setOrderData] = useState(null);
   const [donorData, setDonorData] = useState(null);
   const [paymentLoading, setPaymentLoading] = useState(false);
@@ -111,11 +111,11 @@ export default function DonationFlow() {
   } = useForm({
     resolver: zodResolver(donorSchema),
     defaultValues: {
-      name: user?.name || '',
-      email: user?.email || '',
-      phone: user?.phone || '',
-      pan: user?.pan || '',
-      address: user?.address || '',
+      name: '',
+      email: '',
+      phone: '',
+      pan: '',
+      address: '',
       acceptedPrivacyPolicy: false,
     },
   });
@@ -133,7 +133,6 @@ export default function DonationFlow() {
       .finally(() => setLoadingCampaigns(false));
   }, []);
 
-  // Pre-fill from user profile
   useEffect(() => {
     if (user) {
       setValue('name', user.name || '');
@@ -144,7 +143,7 @@ export default function DonationFlow() {
     }
   }, [user, setValue]);
 
-  const finalAmount = customAmount ? parseInt(customAmount) : amount;
+  const finalAmount = customAmount ? parseInt(customAmount, 10) : amount;
 
   const handleStep1Next = () => {
     if (!selectedCampaignId) return;
@@ -155,20 +154,21 @@ export default function DonationFlow() {
     try {
       const res = await createOrder({
         campaignId: selectedCampaignId,
-        amount: finalAmount * 100, // paise
+        amount: finalAmount * 100,
         donorName: data.name,
         donorEmail: data.email,
         donorPhone: data.phone,
         pan: data.pan || undefined,
         address: data.address,
         acceptedPrivacyPolicy: data.acceptedPrivacyPolicy,
+        isMonthly,
       });
       setOrderData(res.data?.data);
       setDonorData(data);
       setStep(3);
     } catch (err) {
       const errMsg = err.response?.data?.error || 'Order creation failed. Please retry.';
-      alert(`त्रुटि / Error: ${errMsg}`);
+      alert(errMsg);
     }
   };
 
@@ -187,7 +187,7 @@ export default function DonationFlow() {
       amount: orderData.amount,
       currency: orderData.currency || 'INR',
       name: 'EmpowerHer NGO',
-      description: '🔴 TEST MODE — परीक्षण लेनदेन',
+      description: t('Test transaction', '\u092a\u0930\u0940\u0915\u094d\u0937\u0923 \u0932\u0947\u0928\u0926\u0947\u0928'),
       order_id: orderData.orderId,
       prefill: {
         name: donorData?.name,
@@ -207,7 +207,10 @@ export default function DonationFlow() {
           setPaymentSuccess(true);
         } catch (err) {
           const msg = err.response?.data?.error || '';
-          if (msg.includes('विदेशी') || msg.includes('international') || err.response?.status === 400) {
+          if (
+            msg.toLowerCase().includes('international') ||
+            err.response?.status === 400
+          ) {
             setForeignCardError(true);
           } else {
             setPaymentError(msg || 'Verification failed. Please contact support.');
@@ -225,7 +228,10 @@ export default function DonationFlow() {
       rzp.on('payment.failed', (response) => {
         setPaymentLoading(false);
         const errCode = response.error?.code || '';
-        if (errCode.includes('INTERNATIONAL') || response.error?.description?.toLowerCase().includes('international')) {
+        if (
+          errCode.includes('INTERNATIONAL') ||
+          response.error?.description?.toLowerCase().includes('international')
+        ) {
           setForeignCardError(true);
         } else {
           setPaymentError(response.error?.description || 'Payment failed.');
@@ -241,20 +247,22 @@ export default function DonationFlow() {
   const selectedCampaign = campaigns.find((c) => c._id === selectedCampaignId);
 
   return (
-    <div className="min-h-screen flex flex-col font-devanagari">
+    <div className="min-h-screen flex flex-col">
       <Navbar />
       <main role="main" className="flex-1 pt-14 bg-gray-50">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
           <h1 className="text-2xl font-bold text-primaryText text-center mb-4">
-            दान करें / Donate
+            {t('Donate', '\u0926\u093e\u0928 \u0915\u0930\u0947\u0902')}
           </h1>
 
           <StepIndicator step={step} />
 
-          {/* ===== STEP 1: Campaign + Amount ===== */}
+          {/* STEP 1 */}
           {step === 1 && (
             <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 space-y-5">
-              <h2 className="font-semibold text-gray-800">अभियान चुनें / Select Campaign</h2>
+              <h2 className="font-semibold text-gray-800">
+                {t('Select Campaign', '\u0905\u092d\u093f\u092f\u093e\u0928 \u091a\u0941\u0928\u0947\u0902')}
+              </h2>
 
               {loadingCampaigns ? (
                 <LoadingSpinner />
@@ -284,13 +292,14 @@ export default function DonationFlow() {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-gray-500">कोई अभियान उपलब्ध नहीं।</p>
+                <p className="text-sm text-gray-500">
+                  {t('No active campaigns available.', '\u0915\u094b\u0908 \u0905\u092d\u093f\u092f\u093e\u0928 \u0909\u092a\u0932\u092c\u094d\u0927 \u0928\u0939\u0940\u0902\u0964')}
+                </p>
               )}
 
-              {/* Amount selector */}
               <div>
                 <p className="text-sm font-semibold text-gray-700 mb-2">
-                  राशि चुनें / Choose Amount (₹)
+                  {t('Choose Amount (\u20b9)', '\u0930\u093e\u0936\u093f \u091a\u0941\u0928\u0947\u0902 (\u20b9)')}
                 </p>
                 <div className="grid grid-cols-4 gap-2 mb-3">
                   {PRESET_AMOUNTS.map((a) => (
@@ -304,13 +313,13 @@ export default function DonationFlow() {
                           : 'border-gray-300 text-gray-700 hover:border-secondary'
                       }`}
                     >
-                      ₹{a.toLocaleString('en-IN')}
+                      \u20b9{a.toLocaleString('en-IN')}
                     </button>
                   ))}
                 </div>
                 <div>
                   <label htmlFor="custom-amount" className="block text-xs text-gray-500 mb-1">
-                    अन्य राशि / Custom Amount (₹)
+                    {t('Custom Amount (\u20b9)', '\u0905\u0928\u094d\u092f \u0930\u093e\u0936\u093f (\u20b9)')}
                   </label>
                   <input
                     id="custom-amount"
@@ -319,14 +328,15 @@ export default function DonationFlow() {
                     value={customAmount}
                     onChange={(e) => { setCustomAmount(e.target.value); setAmount(0); }}
                     className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-primaryText"
-                    placeholder="₹ enter amount"
+                    placeholder="\u20b9 enter amount"
                   />
                 </div>
               </div>
 
-              {/* One-time / Monthly toggle */}
               <div>
-                <p className="text-sm font-semibold text-gray-700 mb-2">दान प्रकार / Donation Type</p>
+                <p className="text-sm font-semibold text-gray-700 mb-2">
+                  {t('Donation Type', '\u0926\u093e\u0928 \u092a\u094d\u0930\u0915\u093e\u0930')}
+                </p>
                 <div className="flex gap-3">
                   <label htmlFor="type-once" className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -337,7 +347,7 @@ export default function DonationFlow() {
                       onChange={() => setIsMonthly(false)}
                       className="accent-secondary"
                     />
-                    <span className="text-sm text-gray-700">एकमुश्त / One-time</span>
+                    <span className="text-sm text-gray-700">{t('One-time', '\u090f\u0915\u092e\u0941\u0936\u094d\u0924')}</span>
                   </label>
                   <label htmlFor="type-monthly" className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -348,16 +358,18 @@ export default function DonationFlow() {
                       onChange={() => setIsMonthly(true)}
                       className="accent-secondary"
                     />
-                    <span className="text-sm text-gray-700">मासिक / Monthly</span>
+                    <span className="text-sm text-gray-700">{t('Monthly', '\u092e\u093e\u0938\u093f\u0915')}</span>
                   </label>
                 </div>
               </div>
 
               <div className="flex items-center justify-between text-sm text-gray-600 bg-gray-50 rounded p-3">
-                <span>कुल राशि / Total:</span>
+                <span>{t('Total:', '\u0915\u0941\u0932 \u0930\u093e\u0936\u093f:')}</span>
                 <span className="font-bold text-primaryText text-lg">
-                  ₹{(finalAmount || 0).toLocaleString('en-IN')}
-                  {isMonthly && <span className="text-xs font-normal">/माह</span>}
+                  \u20b9{(finalAmount || 0).toLocaleString('en-IN')}
+                  {isMonthly && (
+                    <span className="text-xs font-normal">/{t('mo', '\u092e\u093e\u0939')}</span>
+                  )}
                 </span>
               </div>
 
@@ -366,94 +378,84 @@ export default function DonationFlow() {
                 disabled={!selectedCampaignId || !finalAmount}
                 className="w-full bg-secondary text-white py-3 rounded font-semibold hover:bg-green-700 disabled:opacity-50 transition-colors focus:outline-none focus:ring-2 focus:ring-secondary"
               >
-                आगे बढ़ें / Continue
+                {t('Continue', '\u0906\u0917\u0947 \u092c\u095d\u0947\u0902')}
               </button>
             </div>
           )}
 
-          {/* ===== STEP 2: Donor Details ===== */}
+          {/* STEP 2 */}
           {step === 2 && (
             <form
               onSubmit={handleSubmit(onStep2Submit)}
               noValidate
               className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 space-y-4"
             >
-              <h2 className="font-semibold text-gray-800">दाता विवरण / Donor Details</h2>
+              <h2 className="font-semibold text-gray-800">
+                {t('Donor Details', '\u0926\u093e\u0924\u093e \u0935\u093f\u0935\u0930\u0923')}
+              </h2>
 
               {selectedCampaign && (
                 <div className="text-sm text-gray-600 bg-green-50 rounded p-2">
-                  अभियान: <strong>{selectedCampaign.title}</strong> |
-                  राशि: <strong>₹{(finalAmount || 0).toLocaleString('en-IN')}</strong>
+                  {t('Campaign:', '\u0905\u092d\u093f\u092f\u093e\u0928:')} <strong>{selectedCampaign.title}</strong> |{' '}
+                  {t('Amount:', '\u0930\u093e\u0936\u093f:')}{' '}
+                  <strong>\u20b9{(finalAmount || 0).toLocaleString('en-IN')}</strong>
                 </div>
               )}
 
-              {/* Name */}
               <div>
                 <label htmlFor="donor-name" className="block text-sm font-medium text-gray-700 mb-1">
-                  पूरा नाम / Full Name <span className="text-red-500">*</span>
+                  {t('Full Name', '\u092a\u0942\u0930\u093e \u0928\u093e\u092e')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="donor-name"
                   type="text"
                   autoComplete="name"
                   {...register('name')}
-                  aria-describedby={errors.name ? 'name-error' : undefined}
                   className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-primaryText"
-                  placeholder="आपका नाम"
+                  placeholder={t('Your name', '\u0906\u092a\u0915\u093e \u0928\u093e\u092e')}
                 />
                 {errors.name && (
-                  <p id="name-error" role="alert" className="text-red-600 text-xs mt-1">
-                    {errors.name.message}
-                  </p>
+                  <p role="alert" className="text-red-600 text-xs mt-1">{errors.name.message}</p>
                 )}
               </div>
 
-              {/* Email */}
               <div>
                 <label htmlFor="donor-email" className="block text-sm font-medium text-gray-700 mb-1">
-                  ईमेल / Email <span className="text-red-500">*</span>
+                  {t('Email', '\u0908\u092e\u0947\u0932')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="donor-email"
                   type="email"
                   autoComplete="email"
                   {...register('email')}
-                  aria-describedby={errors.email ? 'email-error' : undefined}
                   className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-primaryText"
                   placeholder="email@example.com"
                 />
                 {errors.email && (
-                  <p id="email-error" role="alert" className="text-red-600 text-xs mt-1">
-                    {errors.email.message}
-                  </p>
+                  <p role="alert" className="text-red-600 text-xs mt-1">{errors.email.message}</p>
                 )}
               </div>
 
-              {/* Phone */}
               <div>
                 <label htmlFor="donor-phone" className="block text-sm font-medium text-gray-700 mb-1">
-                  मोबाइल नंबर / Phone <span className="text-red-500">*</span>
+                  {t('Phone', '\u092e\u094b\u092c\u093e\u0907\u0932 \u0928\u0902\u092c\u0930')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="donor-phone"
                   type="tel"
                   autoComplete="tel"
                   {...register('phone')}
-                  aria-describedby={errors.phone ? 'phone-error' : undefined}
                   className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-primaryText"
                   placeholder="10-digit mobile"
                 />
                 {errors.phone && (
-                  <p id="phone-error" role="alert" className="text-red-600 text-xs mt-1">
-                    {errors.phone.message}
-                  </p>
+                  <p role="alert" className="text-red-600 text-xs mt-1">{errors.phone.message}</p>
                 )}
               </div>
 
-              {/* PAN */}
               <div>
                 <label htmlFor="donor-pan" className="block text-sm font-medium text-gray-700 mb-1">
-                  PAN (80G रसीद के लिए / for 80G receipt)
+                  {t('PAN (for 80G receipt)', 'PAN (80G \u0930\u0938\u0940\u0926 \u0915\u0947 \u0932\u093f\u090f)')}
                 </label>
                 <input
                   id="donor-pan"
@@ -461,67 +463,56 @@ export default function DonationFlow() {
                   autoComplete="off"
                   maxLength={10}
                   {...register('pan')}
-                  aria-describedby="pan-hint"
                   className="w-full border border-gray-300 rounded px-3 py-2 text-sm uppercase focus:ring-2 focus:ring-primaryText"
                   placeholder="AAAAA0000A"
                 />
-                <p id="pan-hint" className="text-xs text-gray-400 mt-0.5">
-                  Format: AAAAA0000A
-                </p>
+                <p className="text-xs text-gray-400 mt-0.5">Format: AAAAA0000A</p>
                 {errors.pan && (
-                  <p role="alert" className="text-red-600 text-xs mt-1">
-                    {errors.pan.message}
-                  </p>
+                  <p role="alert" className="text-red-600 text-xs mt-1">{errors.pan.message}</p>
                 )}
               </div>
 
-              {/* Address */}
               <div>
                 <label htmlFor="donor-address" className="block text-sm font-medium text-gray-700 mb-1">
-                  पता / Address <span className="text-red-500">*</span>
+                  {t('Address', '\u092a\u0924\u093e')} <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   id="donor-address"
                   rows={2}
                   {...register('address')}
-                  aria-describedby={errors.address ? 'address-error' : undefined}
                   className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-primaryText"
-                  placeholder="पूरा पता / Full address"
+                  placeholder={t('Full address', '\u092a\u0942\u0930\u093e \u092a\u0924\u093e')}
                 />
                 {errors.address && (
-                  <p id="address-error" role="alert" className="text-red-600 text-xs mt-1">
-                    {errors.address.message}
-                  </p>
+                  <p role="alert" className="text-red-600 text-xs mt-1">{errors.address.message}</p>
                 )}
               </div>
 
-              {/* Privacy policy — REQUIRED */}
               <div className="bg-gray-50 rounded-lg p-4">
                 <p className="text-xs text-gray-600 mb-3">
-                  <strong>गोपनीयता नीति / Privacy Notice:</strong> आपका नाम, ईमेल, फ़ोन नंबर और PAN दान रसीद
-                  जारी करने और कानूनी अनुपालन (Income Tax Act, Section 80G) के लिए एकत्र किया जाता है।
-                  डेटा तीसरे पक्ष को नहीं बेचा जाएगा।
-                  <br />
-                  Your name, email, phone and PAN are collected for issuing donation receipts and legal compliance
-                  (IT Act Section 80G). Data will not be sold to third parties.
+                  <strong>{t('Privacy Notice:', '\u0917\u094b\u092a\u0928\u0940\u092f\u0924\u093e \u0938\u0942\u091a\u0928\u093e:')}</strong>{' '}
+                  {t(
+                    'Your name, email, phone and PAN are collected for issuing donation receipts and legal compliance (IT Act Section 80G). Data will not be sold to third parties.',
+                    '\u0906\u092a\u0915\u093e \u0928\u093e\u092e, \u0908\u092e\u0947\u0932, \u092b\u093c\u094b\u0928 \u0914\u0930 PAN 80G \u0930\u0938\u0940\u0926 \u0915\u0947 \u0932\u093f\u090f \u090f\u0915\u0924\u094d\u0930 \u0915\u093f\u092f\u093e \u091c\u093e\u0924\u093e \u0939\u0948\u0964 \u0921\u0947\u091f\u093e \u0928\u0939\u0940\u0902 \u092c\u0947\u091a\u093e \u091c\u093e\u090f\u0917\u093e\u0964'
+                  )}
                 </p>
                 <label htmlFor="privacy-checkbox" className="flex items-start gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     id="privacy-checkbox"
                     {...register('acceptedPrivacyPolicy')}
-                    aria-describedby={errors.acceptedPrivacyPolicy ? 'privacy-error' : undefined}
                     className="mt-0.5 accent-secondary"
                   />
                   <span className="text-sm text-gray-700">
-                    मैं गोपनीयता नीति और उपयोग की शर्तें स्वीकार करता/करती हूँ।{' '}
+                    {t(
+                      'I accept the Privacy Policy and Terms of Use.',
+                      '\u092e\u0948\u0902 \u0917\u094b\u092a\u0928\u0940\u092f\u0924\u093e \u0928\u0940\u0924\u093f \u0938\u094d\u0935\u0940\u0915\u093e\u0930 \u0915\u0930\u0924\u093e/\u0915\u0930\u0924\u0940 \u0939\u0942\u0901\u0964'
+                    )}{' '}
                     <span className="text-red-500">*</span>
-                    <br />
-                    I accept the Privacy Policy and Terms of Use.
                   </span>
                 </label>
                 {errors.acceptedPrivacyPolicy && (
-                  <p id="privacy-error" role="alert" className="text-red-600 text-xs mt-1">
+                  <p role="alert" className="text-red-600 text-xs mt-1">
                     {errors.acceptedPrivacyPolicy.message}
                   </p>
                 )}
@@ -533,39 +524,42 @@ export default function DonationFlow() {
                   onClick={() => setStep(1)}
                   className="px-5 py-2.5 rounded border border-gray-300 text-sm text-gray-700 hover:bg-gray-50"
                 >
-                  ← वापस / Back
+                  {t('\u2190 Back', '\u2190 \u0935\u093e\u092a\u0938')}
                 </button>
                 <button
                   type="submit"
                   className="flex-1 bg-secondary text-white py-2.5 rounded font-semibold hover:bg-green-700 transition-colors"
                 >
-                  आगे बढ़ें / Proceed to Payment
+                  {t('Proceed to Payment', '\u092d\u0941\u0917\u0924\u093e\u0928 \u0915\u0940 \u0913\u0930 \u0906\u0917\u0947 \u092c\u095d\u0947\u0902')}
                 </button>
               </div>
             </form>
           )}
 
-          {/* ===== STEP 3: Payment ===== */}
+          {/* STEP 3 */}
           {step === 3 && (
             <div className="space-y-4">
-              {/* RED TEST MODE BANNER — ALWAYS VISIBLE, NEVER CONDITIONAL */}
               <div
                 role="alert"
                 className="w-full bg-red-600 text-white text-center py-3 px-4 rounded font-bold text-sm"
               >
-                🔴 TEST MODE — परीक्षण लेनदेन / This is a test transaction. No real money will be charged.
+                {t(
+                  '\uD83D\uDD34 TEST MODE \u2014 This is a test transaction. No real money will be charged.',
+                  '\uD83D\uDD34 \u092a\u0930\u0940\u0915\u094d\u0937\u0923 \u092e\u094b\u0921 \u2014 \u092f\u0939 \u090f\u0915 \u092a\u0930\u0940\u0915\u094d\u0937\u0923 \u0932\u0947\u0928\u0926\u0947\u0928 \u0939\u0948\u0964 \u0915\u094b\u0908 \u0935\u093e\u0938\u094d\u0924\u0935\u093f\u0915 \u092a\u0948\u0938\u0947 \u0928\u0939\u0940\u0902 \u0915\u093e\u091f\u0947 \u091c\u093e\u090f\u0902\u0917\u0947\u0964'
+                )}
               </div>
 
               {paymentSuccess && completedDonation ? (
                 <div className="bg-white rounded-lg border border-green-300 shadow-sm p-6 text-center space-y-4">
-                  <div className="text-5xl">🎉</div>
+                  <div className="text-5xl">\uD83C\uDF89</div>
                   <h2 className="text-xl font-bold text-green-700">
-                    दान सफल! / Donation Successful!
+                    {t('Donation Successful!', '\u0926\u093e\u0928 \u0938\u092b\u0932!')}
                   </h2>
                   <p className="text-sm text-gray-600">
-                    धन्यवाद, <strong>{donorData?.name}</strong>! आपका दान प्राप्त हो गया।
-                    <br />
-                    Thank you! Your donation has been received.
+                    {t(
+                      `Thank you, ${donorData?.name}! Your donation has been received.`,
+                      `\u0927\u0928\u094d\u092f\u0935\u093e\u0926, ${donorData?.name}! \u0906\u092a\u0915\u093e \u0926\u093e\u0928 \u092a\u094d\u0930\u093e\u092a\u094d\u0924 \u0939\u094b \u0917\u092f\u093e\u0964`
+                    )}
                   </p>
                   {completedDonation.receiptNumber && (
                     <p className="text-xs text-gray-500">
@@ -580,25 +574,27 @@ export default function DonationFlow() {
                     onClick={() => navigate('/')}
                     className="mt-2 text-sm text-secondary hover:underline"
                   >
-                    होमपेज पर जाएँ / Back to Home
+                    {t('Back to Home', '\u0939\u094b\u092e\u092a\u0947\u091c \u092a\u0930 \u091c\u093e\u090f\u0901')}
                   </button>
                 </div>
               ) : (
                 <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 space-y-4">
-                  <h2 className="font-semibold text-gray-800">भुगतान / Payment</h2>
+                  <h2 className="font-semibold text-gray-800">
+                    {t('Payment', '\u092d\u0941\u0917\u0924\u093e\u0928')}
+                  </h2>
 
                   <div className="bg-gray-50 rounded p-4 space-y-1 text-sm text-gray-700">
                     <div className="flex justify-between">
-                      <span>अभियान:</span>
+                      <span>{t('Campaign:', '\u0905\u092d\u093f\u092f\u093e\u0928:')}</span>
                       <span className="font-medium">{selectedCampaign?.title}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>दाता:</span>
+                      <span>{t('Donor:', '\u0926\u093e\u0924\u093e:')}</span>
                       <span className="font-medium">{donorData?.name}</span>
                     </div>
                     <div className="flex justify-between font-bold text-primaryText">
-                      <span>राशि / Amount:</span>
-                      <span>₹{(finalAmount || 0).toLocaleString('en-IN')}</span>
+                      <span>{t('Amount:', '\u0930\u093e\u0936\u093f:')}</span>
+                      <span>\u20b9{(finalAmount || 0).toLocaleString('en-IN')}</span>
                     </div>
                   </div>
 
@@ -613,19 +609,19 @@ export default function DonationFlow() {
                     disabled={paymentLoading}
                     className="w-full bg-secondary text-white py-3 rounded font-bold hover:bg-green-700 disabled:opacity-60 transition-colors"
                   >
-                    {paymentLoading ? 'प्रसंस्करण… / Processing…' : 'अभी भुगतान करें / Pay Now'}
+                    {paymentLoading
+                      ? t('Processing\u2026', '\u092a\u094d\u0930\u0938\u0902\u0938\u094d\u0915\u0930\u0923\u2026')
+                      : t('Pay Now', '\u0905\u092d\u0940 \u092d\u0941\u0917\u0924\u093e\u0928 \u0915\u0930\u0947\u0902')}
                   </button>
 
-                  <div className="flex gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setStep(2)}
-                      disabled={paymentLoading}
-                      className="text-sm text-gray-500 hover:underline disabled:opacity-50"
-                    >
-                      ← वापस / Back
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setStep(2)}
+                    disabled={paymentLoading}
+                    className="text-sm text-gray-500 hover:underline disabled:opacity-50"
+                  >
+                    {t('\u2190 Back', '\u2190 \u0935\u093e\u092a\u0938')}
+                  </button>
                 </div>
               )}
             </div>
@@ -633,29 +629,29 @@ export default function DonationFlow() {
         </div>
       </main>
 
-      {/* Foreign card error modal */}
       {foreignCardError && (
         <div
           role="dialog"
           aria-modal="true"
-          aria-label="Foreign card not accepted"
+          aria-label={t('Foreign card not accepted', '\u0935\u093f\u0926\u0947\u0936\u0940 \u0915\u093e\u0930\u094d\u0921 \u0938\u094d\u0935\u0940\u0915\u093e\u0930 \u0928\u0939\u0940\u0902')}
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
         >
           <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6 text-center space-y-4">
-            <div className="text-3xl">⚠️</div>
+            <div className="text-3xl">\u26a0\uFE0F</div>
             <h2 className="font-bold text-gray-900">
-              विदेशी कार्ड स्वीकार नहीं किए जाते
+              {t('Foreign Cards Not Accepted', '\u0935\u093f\u0926\u0947\u0936\u0940 \u0915\u093e\u0930\u094d\u0921 \u0938\u094d\u0935\u0940\u0915\u093e\u0930 \u0928\u0939\u0940\u0902 \u0915\u093f\u090f \u091c\u093e\u0924\u0947')}
             </h2>
             <p className="text-sm text-gray-700">
-              कृपया भारतीय कार्ड या UPI का उपयोग करें।
-              <br />
-              Foreign cards are not accepted. Please use an Indian card or UPI.
+              {t(
+                'Foreign cards are not accepted. Please use an Indian card or UPI.',
+                '\u0915\u0943\u092a\u092f\u093e \u092d\u093e\u0930\u0924\u0940\u092f \u0915\u093e\u0930\u094d\u0921 \u092f\u093e UPI \u0915\u093e \u0909\u092a\u092f\u094b\u0917 \u0915\u0930\u0947\u0902\u0964'
+              )}
             </p>
             <button
               onClick={() => setForeignCardError(false)}
               className="px-6 py-2 bg-secondary text-white rounded font-medium hover:bg-green-700"
             >
-              ठीक है / OK
+              {t('OK', '\u0920\u0940\u0915 \u0939\u0948')}
             </button>
           </div>
         </div>
