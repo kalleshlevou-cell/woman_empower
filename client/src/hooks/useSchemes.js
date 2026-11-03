@@ -15,8 +15,9 @@ export function useSchemes() {
     setError('');
     try {
       const res = await getSchemes(params);
-      setSchemes(res.data?.data || []);
-      setTotal(res.data?.total || 0);
+      const payload = res.data?.data || {};
+      setSchemes(payload.schemes || payload || []);
+      setTotal(payload.total || 0);
     } catch {
       setError('Could not load schemes.');
     } finally {

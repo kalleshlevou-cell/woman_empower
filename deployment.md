@@ -1,138 +1,189 @@
 # EmpowerHer — Deployment Guide
 
-## GitHub Repository
-**https://github.com/kalleshlevou-cell/woman_empower**
+## Prerequisites
 
-## Demo Login Credentials
-
-| Role  | Email                    | Password   |
-|-------|--------------------------|------------|
-| Admin | admin@empowerher.org     | Admin@123  |
-| Donor | donor@test.com           | Donor@123  |
-
-**Razorpay test card:** `4111 1111 1111 1111` — any future expiry, CVV `123`
+- **Node.js** ≥ 20.x (https://nodejs.org/)
+- **npm** ≥ 10.x (bundled with Node.js)
+- **MongoDB Atlas** account (free tier works) _or_ local MongoDB 7.x
+- **Git** (https://git-scm.com/)
 
 ---
 
 ## Run Locally — Step by Step
 
-### Prerequisites
-- Node.js 18 or higher (`node --version`)
-- Git
-- MongoDB Atlas free account — [cloud.mongodb.com](https://cloud.mongodb.com)
-- Razorpay test account — [razorpay.com](https://razorpay.com)
-
 ### 1. Clone the repository
+
 ```bash
-git clone https://github.com/kalleshlevou-cell/woman_empower.git
-cd woman_empower
+git clone https://github.com/<your-username>/empowerher.git
+cd empowerher
 ```
 
 ### 2. Install all dependencies
+
 ```bash
 npm run install:all
 ```
-Installs root, client, and server dependencies in one command.
 
-### 3. Set up environment variables
+This runs `npm install` in the root, `client/`, and `server/` directories.
+
+### 3. Configure environment variables
+
+#### Server (`server/.env`)
+
+Copy the example file and fill in your values:
 
 ```bash
-cp server/.env.example server/.env
-cp client/.env.example client/.env
+cd server
+cp .env.example .env
 ```
 
-Edit `server/.env`:
-```
-MONGODB_URI=mongodb+srv://<user>:<password>@cluster0.xxxxx.mongodb.net/empowerher
-JWT_SECRET=<any-long-random-string>
-RAZORPAY_KEY_ID=rzp_test_xxxxxxxxxxxx
-RAZORPAY_KEY_SECRET=xxxxxxxxxxxxxxxxxxxx
-TRUST_NAME=Company A Charitable Trust, Bhopal
-TRUST_PAN=<trust-pan>
-TRUST_80G_REG=<trust-80g-reg-number>
-PORT=5000
-CLIENT_URL=http://localhost:5173
+Required variables (names only — never commit actual values):
+
+| Variable | Purpose |
+|---|---|
+| `PORT` | Server port (default: `5000`) |
+| `MONGODB_URI` | MongoDB connection string (Atlas or local) |
+| `JWT_SECRET` | Secret key for signing JWT tokens |
+| `RAZORPAY_KEY_ID` | Razorpay test-mode key ID |
+| `RAZORPAY_KEY_SECRET` | Razorpay test-mode key secret |
+| `TRUST_PAN` | Trust PAN for 80G receipt PDF |
+| `TRUST_80G_REG` | Trust 80G registration number for receipt PDF |
+| `TRUST_NAME` | Trust name printed on receipt PDF |
+| `CLIENT_URL` | Frontend URL for CORS (default: `http://localhost:5173`) |
+| `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name (optional — falls back to local uploads) |
+| `CLOUDINARY_API_KEY` | Cloudinary API key (optional) |
+| `CLOUDINARY_API_SECRET` | Cloudinary API secret (optional) |
+| `EMAIL_HOST` | SMTP host for email (optional — uses Ethereal in dev) |
+| `EMAIL_USER` | SMTP username (optional) |
+| `EMAIL_PASS` | SMTP password (optional) |
+
+#### Client (`client/.env`)
+
+```bash
+cd ../client
+cp .env.example .env
 ```
 
-Edit `client/.env`:
-```
-VITE_API_URL=http://localhost:5000
-VITE_RAZORPAY_KEY_ID=rzp_test_xxxxxxxxxxxx
+| Variable | Purpose |
+|---|---|
+| `VITE_API_URL` | Backend API base URL (default: `http://localhost:5000`) |
+| `VITE_RAZORPAY_KEY_ID` | Razorpay test-mode key ID (public, safe for client) |
+
+### 4. Seed the database
+
+```bash
+cd server
+npm run seed
 ```
 
-### 4. Allow your IP in MongoDB Atlas
-Atlas → Network Access → Add IP Address → Allow from Anywhere (`0.0.0.0/0`)
+This creates sample users, schemes, and campaigns. The seed is idempotent (safe to re-run).
 
-### 5. Start both servers
+### 5. Start the application
+
+From the project root:
+
 ```bash
 npm run dev
 ```
-- Frontend: **http://localhost:5173**
-- Backend: **http://localhost:5000**
 
-The server auto-seeds 2 campaigns, 3 schemes, 1 admin, and 1 donor on first start.
+This starts both the backend (port 5000) and frontend (port 5173) concurrently.
 
-### 6. (Optional) Manual seed
-```bash
-cd server && npm run seed
-```
+- **Frontend**: http://localhost:5173
+- **Backend API**: http://localhost:5000
+
+> **DNS Note (Windows)**: If you see `querySrv ECONNREFUSED` when connecting to MongoDB Atlas, your local DNS may not support SRV records. The server's `db.js` includes a Google DNS fallback (`8.8.8.8`) to handle this automatically.
 
 ---
 
-## Environment Variables Reference
+## Demo Login Credentials
 
-### server/.env
+| Role | Email | Password |
+|------|-------|----------|
+| **Admin** | `admin@empowerher.org` | `Admin@123` |
+| **Donor** | `donor@test.com` | `Donor@123` |
 
-| Variable | Purpose |
-|----------|---------|
-| `MONGODB_URI` | MongoDB Atlas connection string |
-| `JWT_SECRET` | JWT token signing secret |
-| `RAZORPAY_KEY_ID` | Razorpay test key ID |
-| `RAZORPAY_KEY_SECRET` | Razorpay test secret |
-| `TRUST_NAME` | Trust name on 80G certificates |
-| `TRUST_PAN` | Trust PAN on 80G certificates |
-| `TRUST_80G_REG` | Trust 80G registration number |
-| `PORT` | Server port (default 5000) |
-| `CLIENT_URL` | Frontend origin for CORS |
-| `CLOUDINARY_CLOUD_NAME` | Optional — local upload fallback if absent |
-| `CLOUDINARY_API_KEY` | Optional |
-| `CLOUDINARY_API_SECRET` | Optional |
-| `EMAIL_HOST` | Optional — Ethereal mock used in dev if absent |
-| `EMAIL_USER` | Optional |
-| `EMAIL_PASS` | Optional |
+### Razorpay Test Cards
 
-### client/.env
-
-| Variable | Purpose |
-|----------|---------|
-| `VITE_API_URL` | Backend API base URL |
-| `VITE_RAZORPAY_KEY_ID` | Razorpay key for frontend checkout |
+| Scenario | Card Number | Expiry | CVV |
+|----------|------------|--------|-----|
+| **Success** | 4111 1111 1111 1111 | Any future date | 123 |
+| **Failure** | 4000 0000 0000 0002 | Any future date | 123 |
 
 ---
 
 ## Deployment (Production)
 
-### Frontend → Vercel
-1. Import repo at [vercel.com](https://vercel.com)
-2. Root directory: `client`
-3. Add `VITE_API_URL` and `VITE_RAZORPAY_KEY_ID` as env vars
-4. Deploy
+### Option A — Render / Railway
 
-### Backend → Render
-1. New Web Service at [render.com](https://render.com)
-2. Root directory: `server`
-3. Build: `npm install` · Start: `node src/server.js`
-4. Add all `server/.env` variables in Render dashboard
-5. Deploy
+1. **Backend**: Deploy `server/` as a Node.js web service.
+   - Build command: `npm install`
+   - Start command: `node src/server.js`
+   - Set all environment variables from the table above.
 
-### Database → MongoDB Atlas
-Free M0 cluster is sufficient for the demo.
+2. **Frontend**: Deploy `client/` as a static site.
+   - Build command: `npm install && npm run build`
+   - Publish directory: `dist/`
+   - Set `VITE_API_URL` to the deployed backend URL.
+
+### Option B — Vercel (frontend) + Render (backend)
+
+1. Deploy `server/` on Render with env vars.
+2. Deploy `client/` on Vercel; set `VITE_API_URL` to Render backend URL.
+
+### Option C — Single VPS
+
+```bash
+# Build the frontend
+cd client && npm run build
+
+# Serve the built frontend from Express (add static middleware to server.js)
+# Or use nginx to serve client/dist and proxy /api/* to localhost:5000
+
+cd ../server
+NODE_ENV=production node src/server.js
+```
+
+### Environment Variables Needed in Production
+
+All variables from the server table above, plus:
+- Set `MONGODB_URI` to your production Atlas cluster.
+- Set `JWT_SECRET` to a strong random string (≥ 32 chars).
+- Set `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` to live keys (when ready for real payments).
+- Set `CLIENT_URL` to your production frontend domain.
+- Configure `CLOUDINARY_*` for image uploads.
+- Configure `EMAIL_*` for real email delivery.
 
 ---
 
-## Known Limitations
-- All payments are Razorpay **test mode** — no real money moves
-- 80G receipts are for demonstration only — not legally valid
-- AI Hindi summaries are **mocked** — no OpenAI key required to run
-- Email uses **Ethereal** (mock SMTP) in dev — preview URL shown in UI after donation
-- Data resets on server restart if Atlas is unreachable (falls back to in-memory MongoDB)
+## Project Structure
+
+```
+empowerher/
+├── package.json              # Root — concurrently runs both apps
+├── server/
+│   ├── package.json
+│   ├── .env.example
+│   └── src/
+│       ├── server.js          # Express entry point
+│       ├── seed.js            # Database seeder
+│       ├── config/db.js       # MongoDB connection
+│       ├── models/            # Mongoose schemas (User, Scheme, Campaign, Donation, etc.)
+│       ├── controllers/       # Route handlers
+│       ├── routes/            # Express routers
+│       ├── middleware/        # Auth, error handler, rate limiter, upload
+│       └── utils/             # PDF generator, email service, eligibility engine
+├── client/
+│   ├── package.json
+│   ├── .env.example
+│   ├── vite.config.js
+│   └── src/
+│       ├── App.jsx            # Router setup
+│       ├── main.jsx           # Entry point
+│       ├── api/               # Axios instance + API wrappers
+│       ├── components/        # Reusable UI components
+│       ├── context/           # Auth + Language contexts
+│       ├── hooks/             # Custom React hooks
+│       ├── pages/             # Page components (Home, SchemeFinder, Admin*, etc.)
+│       └── utils/             # Validators, formatters, constants
+└── deployment.md              # This file
+```
