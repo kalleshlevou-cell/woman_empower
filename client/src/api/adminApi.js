@@ -25,10 +25,14 @@ export const adminGetCampaigns = (params) =>
   axiosInstance.get('/api/admin/campaigns', { params });
 
 export const adminCreateCampaign = (data) =>
-  axiosInstance.post('/api/admin/campaigns', data);
+  axiosInstance.post('/api/admin/campaigns', data, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
 
 export const adminUpdateCampaign = (id, data) =>
-  axiosInstance.put(`/api/admin/campaigns/${id}`, data);
+  axiosInstance.put(`/api/admin/campaigns/${id}`, data, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
 
 // Donations
 export const adminGetDonations = (params) =>
