@@ -34,6 +34,7 @@ const PAGE_SIZE = 9;
 export default function SchemeFinder() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { lang } = useLanguage();
+  const t = (en, hi) => lang === 'hi' ? hi : en;
 
   // Filters
   const [keyword, setKeyword] = useState('');
@@ -156,8 +157,7 @@ export default function SchemeFinder() {
       <main role="main" className="flex-1 pt-14">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <h1 className="text-2xl font-bold text-primaryText mb-6">
-            महिला सरकारी योजना खोज{' '}
-            <span className="text-sm font-normal text-gray-500">/ Women&apos;s Schemes Finder</span>
+            {t("Women's Government Schemes", 'महिला सरकारी योजना खोज')}
           </h1>
 
           <div className="flex flex-col lg:flex-row gap-6">
@@ -166,14 +166,12 @@ export default function SchemeFinder() {
               {/* Keyword search */}
               <div className="bg-white border border-gray-200 rounded-lg p-4">
                 <label htmlFor="keyword-input" className="block text-sm font-semibold text-gray-700 mb-1">
-                  योजना खोजें / Search
+                  {t('Search Schemes', 'योजना खोजें')}
                 </label>
                 <input
-                  id="keyword-input"
-                  type="text"
-                  value={keyword}
+                  id="keyword-input" type="text" value={keyword}
                   onChange={(e) => { setKeyword(e.target.value); setPage(1); }}
-                  placeholder="योजना का नाम…"
+                  placeholder={t('Scheme name…', 'योजना का नाम…')}
                   className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primaryText"
                 />
               </div>
@@ -182,7 +180,7 @@ export default function SchemeFinder() {
               <div className="bg-white border border-gray-200 rounded-lg p-4">
                 <fieldset>
                   <legend className="text-sm font-semibold text-gray-700 mb-2">
-                    ज़रूरत / Need
+                    {t('Need', 'ज़रूरत')}
                   </legend>
                   <div className="space-y-2">
                     {NEEDS.map((n) => (
@@ -206,15 +204,11 @@ export default function SchemeFinder() {
               {/* District dropdown */}
               <div className="bg-white border border-gray-200 rounded-lg p-4">
                 <label htmlFor="district-filter" className="block text-sm font-semibold text-gray-700 mb-1">
-                  जिला / District
+                  {t('District', 'जिला')}
                 </label>
-                <select
-                  id="district-filter"
-                  value={district}
-                  onChange={(e) => { setDistrict(e.target.value); setPage(1); }}
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primaryText"
-                >
-                  <option value="">— सभी —</option>
+                <select id="district-filter" value={district} onChange={(e) => { setDistrict(e.target.value); setPage(1); }}
+                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primaryText">
+                  <option value="">{t('— All —', '— सभी —')}</option>
                   {MP_DISTRICTS.map((d) => (
                     <option key={d} value={d}>{d}</option>
                   ))}
@@ -225,13 +219,13 @@ export default function SchemeFinder() {
               <div className="bg-white border border-gray-200 rounded-lg p-4">
                 <fieldset>
                   <legend className="text-sm font-semibold text-gray-700 mb-2">
-                    योजना प्रकार / Scheme Type
+                    {t('Scheme Type', 'योजना प्रकार')}
                   </legend>
                   <div className="space-y-2">
                     {[
-                      { value: '', label: 'सभी / All' },
-                      { value: 'central', label: 'केंद्र / Central' },
-                      { value: 'state', label: 'राज्य / State' },
+                      { value: '', label: t('All', 'सभी') },
+                      { value: 'central', label: t('Central', 'केंद्र') },
+                      { value: 'state', label: t('State', 'राज्य') },
                     ].map((opt) => (
                       <label key={opt.value} htmlFor={`type-${opt.value || 'all'}`} className="flex items-center gap-2 cursor-pointer">
                         <input
@@ -257,7 +251,7 @@ export default function SchemeFinder() {
                   aria-expanded={showEligibility}
                   className="flex items-center justify-between w-full text-sm font-semibold text-primaryText focus:outline-none focus:ring-2 focus:ring-primaryText rounded"
                 >
-                  <span>पात्रता जाँचें / Check Eligibility</span>
+                  <span>{t('Check Eligibility', 'पात्रता जाँचें')}</span>
                   <span>{showEligibility ? '▲' : '▼'}</span>
                 </button>
 
@@ -266,7 +260,7 @@ export default function SchemeFinder() {
                     {/* Marital status */}
                     <div>
                       <label htmlFor="eq-marital" className="block text-xs text-gray-600 mb-1">
-                        वैवाहिक स्थिति / Marital Status
+                        {t('Marital Status', 'वैवाहिक स्थिति')}
                       </label>
                       <select
                         id="eq-marital"
@@ -286,18 +280,12 @@ export default function SchemeFinder() {
                     {/* Age */}
                     <div>
                       <label htmlFor="eq-age" className="block text-xs text-gray-600 mb-1">
-                        आयु / Age
+                        {t('Age', 'आयु')}
                       </label>
-                      <input
-                        id="eq-age"
-                        type="number"
-                        min="10"
-                        max="100"
-                        value={answers.age}
+                      <input id="eq-age" type="number" min="10" max="100" value={answers.age}
                         onChange={(e) => setAnswers((a) => ({ ...a, age: parseInt(e.target.value) || '' }))}
                         className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm"
-                        placeholder="वर्ष / years"
-                      />
+                        placeholder={t('Years', 'वर्ष')} />
                     </div>
 
                     {/* District */}
@@ -326,7 +314,7 @@ export default function SchemeFinder() {
                         checked={answers.bplCard}
                         onChange={(e) => setAnswers((a) => ({ ...a, bplCard: e.target.checked }))}
                       />
-                      <span className="text-xs text-gray-700">BPL कार्डधारक / BPL Card Holder</span>
+                      <span className="text-xs text-gray-700">{t('BPL Card Holder', 'BPL कार्डधारक')}</span>
                     </label>
 
                     <label htmlFor="eq-pregnant" className="flex items-center gap-2 cursor-pointer">
@@ -336,7 +324,7 @@ export default function SchemeFinder() {
                         checked={answers.pregnant}
                         onChange={(e) => setAnswers((a) => ({ ...a, pregnant: e.target.checked }))}
                       />
-                      <span className="text-xs text-gray-700">गर्भवती / Pregnant</span>
+                      <span className="text-xs text-gray-700">{t('Pregnant', 'गर्भवती')}</span>
                     </label>
 
                     <label htmlFor="eq-shm" className="flex items-center gap-2 cursor-pointer">
@@ -346,14 +334,14 @@ export default function SchemeFinder() {
                         checked={answers.shmMember}
                         onChange={(e) => setAnswers((a) => ({ ...a, shmMember: e.target.checked }))}
                       />
-                      <span className="text-xs text-gray-700">SHG सदस्य / SHG Member</span>
+                      <span className="text-xs text-gray-700">{t('SHG Member', 'SHG सदस्य')}</span>
                     </label>
 
                     <button
                       onClick={handleEligibilityCheck}
                       className="w-full bg-secondary text-white py-2 rounded text-sm font-semibold hover:bg-green-700 transition-colors"
                     >
-                      पात्रता जाँचें / Check
+                      {t('Check Eligibility', 'पात्रता जाँचें')}
                     </button>
                   </div>
                 )}
@@ -365,7 +353,7 @@ export default function SchemeFinder() {
                 aria-label="Request helpline callback"
                 className="w-full bg-secondary text-white py-2 rounded text-sm font-semibold hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-secondary"
               >
-                📞 सहायता कॉलबैक / Helpline Call-back
+                📞 {t('Helpline Call-back', 'सहायता कॉलबैक')}
               </button>
             </aside>
 
@@ -382,8 +370,8 @@ export default function SchemeFinder() {
               ) : schemes.length > 0 ? (
                 <>
                   <p className="text-sm text-gray-500 mb-4">
-                    {total} योजनाएँ मिलीं / schemes found
-                  </p>
+                  {total} {t('schemes found', 'योजनाएँ मिलीं')}
+                </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
                     {schemes.map((s) => (
                       <SchemeCard
@@ -421,9 +409,9 @@ export default function SchemeFinder() {
                   )}
                 </>
               ) : (
-                <div className="text-center py-16 text-gray-500">
-                  <p className="text-lg">कोई योजना नहीं मिली</p>
-                  <p className="text-sm mt-1">No schemes found. Try adjusting your filters.</p>
+                  <div className="text-center py-16 text-gray-500">
+                  <p className="text-lg">{t('No schemes found', 'कोई योजना नहीं मिली')}</p>
+                  <p className="text-sm mt-1">{t('Try adjusting your filters.', 'फ़िल्टर बदलकर देखें।')}</p>
                 </div>
               )}
             </section>
@@ -441,56 +429,39 @@ export default function SchemeFinder() {
         >
           <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6">
             <h2 className="text-lg font-bold text-primaryText mb-4">
-              सहायता कॉलबैक / Helpline Call-back
+              {t('Helpline Call-back', 'सहायता कॉलबैक')}
             </h2>
             {helplineSuccess ? (
               <p className="text-green-700 text-sm">
-                ✅ अनुरोध प्राप्त हुआ। हम जल्द संपर्क करेंगे। / Request received. We will call you soon.
+                ✅ {t('Request received. We will call you soon.', 'अनुरोध प्राप्त हुआ। हम जल्द संपर्क करेंगे।')}
               </p>
             ) : (
               <form onSubmit={handleHelplineSubmit} className="space-y-3">
                 <div>
                   <label htmlFor="hl-phone" className="block text-sm font-medium text-gray-700 mb-1">
-                    फ़ोन नंबर / Phone Number
+                    {t('Phone Number', 'फ़ोन नंबर')}
                   </label>
-                  <input
-                    id="hl-phone"
-                    type="tel"
-                    required
-                    value={helplinePhone}
+                  <input id="hl-phone" type="tel" required value={helplinePhone}
                     onChange={(e) => setHelplinePhone(e.target.value)}
                     className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-primaryText"
-                    placeholder="10-digit mobile"
-                  />
+                    placeholder={t('10-digit mobile', '10 अंकों का मोबाइल')} />
                 </div>
                 <div>
                   <label htmlFor="hl-msg" className="block text-sm font-medium text-gray-700 mb-1">
-                    संदेश / Message (optional)
+                    {t('Message (optional)', 'संदेश (वैकल्पिक)')}
                   </label>
-                  <textarea
-                    id="hl-msg"
-                    value={helplineMsg}
-                    onChange={(e) => setHelplineMsg(e.target.value)}
-                    rows={3}
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-primaryText"
-                    placeholder="आपकी समस्या / Your query"
-                  />
+                  <textarea id="hl-msg" value={helplineMsg} onChange={(e) => setHelplineMsg(e.target.value)}
+                    rows={3} className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-primaryText"
+                    placeholder={t('Your query', 'आपकी समस्या')} />
                 </div>
                 <div className="flex gap-3">
-                  <button
-                    type="submit"
-                    disabled={helplineSubmitting}
-                    className="flex-1 bg-secondary text-white py-2 rounded text-sm font-semibold hover:bg-green-700 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-secondary"
-                  >
-                    {helplineSubmitting ? '…' : 'भेजें / Submit'}
+                  <button type="submit" disabled={helplineSubmitting}
+                    className="flex-1 bg-secondary text-white py-2 rounded text-sm font-semibold hover:bg-green-700 disabled:opacity-60">
+                    {helplineSubmitting ? '…' : t('Submit', 'भेजें')}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowHelpline(false)}
-                    aria-label="Close helpline modal"
-                    className="px-4 py-2 rounded border border-gray-300 text-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400"
-                  >
-                    बंद / Close
+                  <button type="button" onClick={() => setShowHelpline(false)} aria-label="Close helpline modal"
+                    className="px-4 py-2 rounded border border-gray-300 text-sm text-gray-700 hover:bg-gray-50">
+                    {t('Close', 'बंद')}
                   </button>
                 </div>
               </form>
