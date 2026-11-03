@@ -4,7 +4,7 @@
 | Service | URL |
 |---------|-----|
 | Backend API (Render) | **https://woman-empower.onrender.com** ✅ Live |
-| Frontend (Vercel) | https://woman-empower.vercel.app *(after Vercel deploy)* |
+| Frontend (Vercel) | **https://client-7eab.vercel.app** ✅ Live |
 | GitHub | https://github.com/kalleshlevou-cell/woman_empower |
 
 ## Prerequisites

@@ -1,5 +1,17 @@
 # EmpowerHer — NGO Donations & Women's Welfare Portal
 
+## 🌐 Live Demo
+| | URL |
+|---|---|
+| **Frontend** | **https://client-7eab.vercel.app** |
+| **Backend API** | **https://woman-empower.onrender.com** |
+
+## Demo Credentials
+| Role | Email | Password |
+|------|-------|----------|
+| Admin | admin@empowerher.org | Admin@123 |
+| Donor | donor@test.com | Donor@123 |
+
 A full-stack MERN platform connecting donors, women seeking government benefits, and NGO administrators. Features a women's government schemes finder, a complete donation workflow with 80G receipts, and an admin dashboard.
 
 ## Tech Stack
