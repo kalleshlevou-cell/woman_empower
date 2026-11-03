@@ -21,7 +21,8 @@ const donorSchema = z.object({
     .regex(/^\d{10}$/, '10 अंकों का मोबाइल नंबर / 10-digit mobile number'),
   pan: z
     .string()
-    .regex(PAN_REGEX, 'PAN format: AAAAA0000A')
+    .transform((v) => v.toUpperCase())
+    .pipe(z.string().regex(PAN_REGEX, 'PAN format: AAAAA0000A'))
     .or(z.literal(''))
     .optional(),
   address: z.string().min(1, 'पता आवश्यक है / Address is required'),

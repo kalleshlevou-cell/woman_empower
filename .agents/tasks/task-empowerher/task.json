@@ -1,0 +1,7 @@
+{
+  "task_id": "task-empowerher",
+  "task_description": "Build the EmpowerHer NGO Donations & Women's Welfare Portal — a production-style full-stack MERN application with a Hindi-first women's government schemes finder, a 3-step Razorpay donation flow with 80G PDF receipts, and an admin CMS with CSV/Form10BD export.",
+  "status": "pending",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003", "FEAT-004"],
+  "blocked_reason": null
+}

@@ -43,7 +43,7 @@ function generateReceiptPDF(donation, campaign) {
     if (!trustPan) return reject(new Error('TRUST_PAN env variable is required for PDF generation'));
     if (!trust80g) return reject(new Error('TRUST_80G_REG env variable is required for PDF generation'));
     if (!donation.donorName) return reject(new Error('donation.donorName is required'));
-    if (!donation.pan) return reject(new Error('donation.pan is required'));
+    // PAN is optional — 80G certificate won't be tax-valid without it, but we still generate receipt
     if (donation.amount === undefined) return reject(new Error('donation.amount is required'));
     if (!donation.createdAt) return reject(new Error('donation.createdAt is required'));
     if (!donation.receiptNumber) return reject(new Error('donation.receiptNumber is required'));
@@ -86,7 +86,7 @@ function generateReceiptPDF(donation, campaign) {
     doc.fontSize(11).font('Helvetica-Bold').text('Donor Details');
     doc.fontSize(10).font('Helvetica');
     doc.text(`Name:    ${donation.donorName}`);
-    doc.text(`PAN:     ${donation.pan}`);
+    doc.text(`PAN:     ${donation.pan || '(not provided — 80G certificate requires PAN)'}`);
     if (donation.donorAddress) doc.text(`Address: ${donation.donorAddress}`);
     doc.moveDown(0.5);
 

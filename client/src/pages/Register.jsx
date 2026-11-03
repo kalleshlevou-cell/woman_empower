@@ -21,7 +21,8 @@ const registerSchema = z.object({
     .regex(/[^A-Za-z0-9]/, 'एक विशेष वर्ण / At least one special character'),
   pan: z
     .string()
-    .regex(PAN_REGEX, 'PAN format: AAAAA0000A')
+    .transform((v) => v.toUpperCase())
+    .pipe(z.string().regex(PAN_REGEX, 'PAN format: AAAAA0000A'))
     .or(z.literal(''))
     .optional(),
 });

@@ -13,6 +13,7 @@ const registerSchema = Joi.object({
       'string.pattern.base': 'Password must contain at least one uppercase letter, one number, and one special character.',
     }),
   pan: Joi.string()
+    .uppercase()
     .pattern(/^[A-Z]{5}[0-9]{4}[A-Z]$/)
     .optional()
     .allow('', null)

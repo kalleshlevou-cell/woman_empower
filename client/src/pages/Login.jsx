@@ -35,7 +35,9 @@ export default function Login() {
       const res = await loginApi(data);
       const { token, user } = res.data?.data || res.data;
       login(token, user);
-      navigate(from, { replace: true });
+      // Redirect admins to /admin dashboard; others to where they came from
+      const destination = user.role === 'admin' ? '/admin' : from;
+      navigate(destination, { replace: true });
     } catch (err) {
       setServerError(err.response?.data?.error || 'Login failed. Please try again.');
     } finally {

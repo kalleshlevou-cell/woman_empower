@@ -1,0 +1,18 @@
+{
+  "project_type": "Full-stack MERN monorepo — Express REST API + React 18/Vite SPA",
+  "language": "JavaScript (Node.js backend, React frontend — no TypeScript)",
+  "build_system": "npm workspaces-style monorepo without workspaces config; root package.json uses concurrently to run both apps. `npm run install:all` installs root + client + server. Each sub-project has its own package.json. Vite for client bundling.",
+  "test_framework": "None prescribed — no test framework to set up. Verification is done by running the dev servers and using curl/browser.",
+  "build_command": "npm run build (in client/) for production build; npm run dev (root) for development",
+  "test_command": "No automated test suite. Verification: `npm run dev` starts both servers; manual curl checks for API; browser checks for UI.",
+  "verification_instructions": "1. From project root run `npm run dev` — both servers start (client :5173, server :5000). 2. Run `cd server && npm run seed` to populate DB. 3. Open http://localhost:5173 — homepage shows Hindi text with schemes finder above the fold. 4. Test each screen manually per the smoke test checklist in plan.md item 41.",
+  "snapshot_or_generated_files": "server/uploads/ — local fallback for Cloudinary images when env vars absent. Not committed. .env files — never committed.",
+  "environment_constraints": "Windows PowerShell environment. Use `mkdir -p` equivalent (`New-Item -ItemType Directory -Force`). All file paths use backslashes internally but forward slashes in code. MongoDB must be running locally or MONGODB_URI must point to Atlas. Razorpay test keys required for donation flow. Cloudinary optional — falls back to local file storage.",
+  "contribution_requirements": "No AGENTS.md or CONTRIBUTING.md — greenfield project. Follow the architectural decisions in plan.md exactly: money in paise, atomic receipt counter, backend-only Razorpay signature verification, DPDP comments on PII fields, TEST MODE banner always visible.",
+  "key_patterns": "Greenfield — no existing patterns. Establish these conventions: API responses always `{ success: true, data }` or `{ success: false, error }`. Controllers use `async (req, res, next) => { try { } catch(e) { next(e) } }`. Hindi fields end in `_hi`, English in `_en`. Money stored as integer paise, displayed as ₹ via `toLocaleString('en-IN', { style: 'currency', currency: 'INR' })`. Tailwind for all styling — no inline styles. React Hook Form + Zod for all forms.",
+  "relevant_files": [
+    "c:\\Users\\giris\\Desktop\\New folder (11)\\empowerher\\.agents\\tasks\\plan.md",
+    "c:\\Users\\giris\\Desktop\\New folder (11)\\empowerher\\.agents\\tasks\\task-empowerher\\context.json"
+  ],
+  "directory_structure": "empowerher/ (root) — package.json (concurrently dev), README.md, .gitignore | empowerher/server/ — Express app: src/server.js (entry), src/config/ (db.js), src/models/ (7 Mongoose models), src/routes/ (6 route files), src/controllers/ (6 controllers), src/middleware/ (auth.js, errorHandler.js, rateLimiter.js, upload.js), src/utils/ (pdfGenerator.js, emailService.js, receiptCounter.js, eligibilityEngine.js), src/seed.js, .env.example | empowerher/client/ — Vite+React: src/api/ (6 API helper files), src/components/ (Navbar, Footer, SchemeCard, CampaignCard, LoadingSpinner, ReceiptDownload), src/pages/ (12 page components), src/context/ (AuthContext, LanguageContext), src/hooks/ (useAuth, useSchemes), src/utils/ (validators, formatters, constants), .env.example"
+}

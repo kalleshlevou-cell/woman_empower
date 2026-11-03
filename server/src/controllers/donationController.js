@@ -23,10 +23,12 @@ const createOrderSchema = Joi.object({
     .pattern(/^[0-9]{10}$/)
     .required()
     .messages({ 'string.pattern.base': 'Phone must be 10 digits.' }),
-  // DPDP: PAN required for 80G receipt
+  // DPDP: PAN collected for 80G receipt. Optional but required to get 80G certificate.
   pan: Joi.string()
+    .uppercase()
     .pattern(/^[A-Z]{5}[0-9]{4}[A-Z]$/)
-    .required()
+    .optional()
+    .allow('', null)
     .messages({ 'string.pattern.base': 'Invalid PAN format. Expected: AAAAA0000A' }),
   isMonthly: Joi.boolean().default(false),
   address: Joi.string().required(),
