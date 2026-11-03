@@ -10,6 +10,7 @@ import ReceiptDownload from '../components/ReceiptDownload';
 import { getCampaigns } from '../api/campaignsApi';
 import { createOrder, verifyPayment } from '../api/donationsApi';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../components/Toast';
 
 const PAN_REGEX = /^[A-Z]{5}[0-9]{4}[A-Z]$/;
 
@@ -76,6 +77,7 @@ function loadRazorpayScript() {
 export default function DonationFlow() {
   const { campaignId } = useParams();
   const { user } = useAuth();
+  const { toast } = useToast();
   const navigate = useNavigate();
 
   const [step, setStep] = useState(1);
@@ -142,7 +144,7 @@ export default function DonationFlow() {
       setDonorData(data);
       setStep(3);
     } catch (err) {
-      alert(err.response?.data?.error || 'Order creation failed. Please retry.');
+      toast.error(err.response?.data?.error || 'Order creation failed. Please retry.');
     }
   };
 
@@ -429,6 +431,19 @@ export default function DonationFlow() {
                     </p>
                   )}
                   <ReceiptDownload donationId={completedDonation.donationId} receiptNumber={completedDonation.receiptNumber} />
+                  {completedDonation.emailPreviewUrl && (
+                    <div className="mt-3 flex flex-col items-center gap-1">
+                      <a
+                        href={completedDonation.emailPreviewUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 text-blue-700 rounded text-sm font-medium hover:bg-blue-100 transition-colors"
+                      >
+                        📧 View Confirmation Email (Demo)
+                      </a>
+                      <p className="text-xs text-gray-400">This is a test email preview — not sent to a real inbox</p>
+                    </div>
+                  )}
                   <button onClick={() => navigate('/')} className="mt-2 text-sm text-secondary hover:underline">
                     Back to Home
                   </button>

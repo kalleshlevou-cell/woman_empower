@@ -20,8 +20,29 @@ export default function CampaignCard({ campaign }) {
   const target  = campaign.targetAmount || 1;
   const percent = Math.min(100, Math.round((raised / target) * 100));
 
+  // Badge / closed-state logic
+  const now = new Date();
+  const endDate = campaign.endDate ? new Date(campaign.endDate) : null;
+  const isClosed = campaign.status === 'closed' || (endDate !== null && endDate < now);
+  const daysUntilEnd = endDate && !isClosed
+    ? Math.ceil((endDate - now) / (1000 * 60 * 60 * 24))
+    : null;
+  const isEndingSoon = daysUntilEnd !== null && daysUntilEnd <= 7;
+
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 flex flex-col gap-3 hover:shadow-md transition-shadow">
+    <div className="relative bg-white rounded-lg border border-gray-200 shadow-sm p-4 flex flex-col gap-3 hover:shadow-md transition-shadow">
+      {/* Status badges */}
+      {isClosed && (
+        <span className="absolute top-2 right-2 bg-gray-400 text-white text-xs font-semibold px-2 py-0.5 rounded-full z-10">
+          {t('Closed', 'बंद')}
+        </span>
+      )}
+      {!isClosed && isEndingSoon && (
+        <span className="absolute top-2 right-2 bg-orange-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full z-10">
+          {t('Ending Soon', 'जल्द समाप्त')}
+        </span>
+      )}
+
       {campaign.image && (
         <img src={campaign.image} alt={campaign.title} className="w-full h-36 object-cover rounded" />
       )}
@@ -50,12 +71,22 @@ export default function CampaignCard({ campaign }) {
         </div>
       </div>
 
-      <Link
-        to={`/donate/${campaign._id}`}
-        className="mt-auto block text-center bg-secondary text-white py-2 rounded text-sm font-medium hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-secondary"
-      >
-        {t('Donate Now', 'दान करें')}
-      </Link>
+      {isClosed ? (
+        <button
+          disabled
+          aria-disabled="true"
+          className="mt-auto block text-center w-full bg-gray-200 text-gray-400 py-2 rounded text-sm font-medium cursor-not-allowed"
+        >
+          {t('Campaign Closed', 'अभियान समाप्त')}
+        </button>
+      ) : (
+        <Link
+          to={`/donate/${campaign._id}`}
+          className="mt-auto block text-center bg-secondary text-white py-2 rounded text-sm font-medium hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-secondary"
+        >
+          {t('Donate Now', 'दान करें')}
+        </Link>
+      )}
     </div>
   );
 }

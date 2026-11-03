@@ -4,7 +4,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import SchemeCard from '../components/SchemeCard';
 import CampaignCard from '../components/CampaignCard';
-import LoadingSpinner from '../components/LoadingSpinner';
+import { SkeletonGrid, SkeletonCampaignCard } from '../components/SkeletonCard';
 import { getSchemes } from '../api/schemesApi';
 import { getCampaigns } from '../api/campaignsApi';
 import { useLanguage } from '../context/LanguageContext';
@@ -82,6 +82,7 @@ export default function Home() {
 
   const [selectedNeed, setSelectedNeed]       = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('');
+  const [heroSearch, setHeroSearch]           = useState('');
   const [schemes, setSchemes]                 = useState([]);
   const [campaigns, setCampaigns]             = useState([]);
   const [loadingSchemes, setLoadingSchemes]   = useState(true);
@@ -144,6 +145,45 @@ export default function Home() {
           </div>
           <div className="hidden sm:block w-20" aria-hidden="true" />
         </div>
+        {/* Hero search bar */}
+        <div className="flex flex-col items-center gap-2 mt-4 pb-6 w-full px-4">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (heroSearch.trim()) navigate(`/schemes?q=${encodeURIComponent(heroSearch.trim())}`);
+            }}
+            className="flex items-center gap-2 bg-white rounded-full shadow-md px-2 w-full max-w-xl"
+          >
+            <input
+              type="text"
+              value={heroSearch}
+              onChange={(e) => setHeroSearch(e.target.value)}
+              placeholder={t('Search schemes, benefits, eligibility…', 'योजनाएँ, लाभ, पात्रता खोजें…')}
+              aria-label={t('Search schemes', 'योजनाएँ खोजें')}
+              className="flex-1 px-5 py-3 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-secondary bg-transparent"
+            />
+            <button
+              type="submit"
+              aria-label={t('Search', 'खोजें')}
+              className="bg-secondary text-white px-4 py-3 rounded-full hover:bg-green-700 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35m0 0A7 7 0 1 0 6.35 6.35a7 7 0 0 0 10.3 10.3z" />
+              </svg>
+            </button>
+          </form>
+          <div className="flex gap-2 flex-wrap justify-center mt-1">
+            {NEEDS.map((n) => (
+              <button
+                key={n.key}
+                onClick={() => navigate(`/schemes?need=${n.key}`)}
+                className="px-4 py-1 rounded-full text-xs font-medium bg-white/80 text-primaryText hover:bg-white transition-colors border border-white/50"
+              >
+                {t(n.en, n.hi)}
+              </button>
+            ))}
+          </div>
+        </div>
       </header>
 
       <main role="main" className="flex-1">
@@ -201,7 +241,7 @@ export default function Home() {
           <h2 className="text-xl font-bold text-primaryText mb-6 text-center">
             {t('Featured Schemes', 'प्रमुख योजनाएँ')}
           </h2>
-          {loadingSchemes ? <LoadingSpinner /> : schemes.length > 0 ? (
+          {loadingSchemes ? <SkeletonGrid /> : schemes.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {schemes.map((s) => <SchemeCard key={s._id} scheme={s} lang={lang} />)}
             </div>
@@ -218,7 +258,11 @@ export default function Home() {
             <h2 className="text-xl font-bold text-primaryText mb-6 text-center">
               {t('Donation Campaigns', 'दान अभियान')}
             </h2>
-            {loadingCampaigns ? <LoadingSpinner /> : campaigns.length > 0 ? (
+            {loadingCampaigns ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[0, 1, 2].map((i) => <SkeletonCampaignCard key={i} />)}
+              </div>
+            ) : campaigns.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {campaigns.map((c) => <CampaignCard key={c._id} campaign={c} lang={lang} />)}
               </div>

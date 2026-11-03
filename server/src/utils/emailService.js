@@ -87,9 +87,11 @@ async function sendDonationConfirmation({ to, donorName, receiptNumber, amount, 
     if (previewUrl) {
       console.log('Email preview URL:', previewUrl);
     }
+    return previewUrl || null;
   } catch (err) {
     // Never fail the donation flow if email fails
     console.error('Email service error:', err.message);
+    return null;
   }
 }
 

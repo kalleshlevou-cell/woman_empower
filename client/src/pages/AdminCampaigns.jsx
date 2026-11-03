@@ -11,6 +11,7 @@ import {
   adminUpdateCampaign,
 } from '../api/adminApi';
 import { formatINR, formatDate } from '../utils/formatters';
+import { useToast } from '../components/Toast';
 
 const campaignSchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -60,6 +61,7 @@ function CampaignModal({ campaign, onClose, onSaved }) {
   const [saving, setSaving] = useState(false);
   const [serverError, setServerError] = useState('');
   const [previewImg, setPreviewImg] = useState(campaign?.image || '');
+  const { toast } = useToast();
 
   const defaultValues = {
     title: campaign?.title || '',
@@ -105,6 +107,7 @@ function CampaignModal({ campaign, onClose, onSaved }) {
       const saved = res.data?.data;
       if (saved?.image) setPreviewImg(saved.image);
       onSaved();
+      toast.success('Campaign saved successfully');
       onClose();
     } catch (err) {
       setServerError(err.response?.data?.error || 'Save failed.');

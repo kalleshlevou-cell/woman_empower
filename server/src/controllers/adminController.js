@@ -30,6 +30,7 @@ const getDashboard = async (req, res, next) => {
       uniqueDonorCount,
       schemesByStatus,
       campaignCount,
+      successfulDonationsCount,
     ] = await Promise.all([
       Donation.countDocuments(),
       Donation.aggregate([
@@ -39,6 +40,7 @@ const getDashboard = async (req, res, next) => {
       Donation.distinct('donorId', { donorId: { $ne: null } }),
       Scheme.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
       Campaign.countDocuments({ status: 'active' }),
+      Donation.countDocuments({ paymentStatus: 'success' }),
     ]);
 
     const totalAmountPaise = successfulDonations[0]?.total || 0;
@@ -69,6 +71,7 @@ const getDashboard = async (req, res, next) => {
         activeCampaigns: campaignCount,
         schemesByStatus: Object.fromEntries(schemesByStatus.map((s) => [s._id, s.count])),
         campaignStats,
+        successfulDonationsCount,
       },
     });
   } catch (e) {

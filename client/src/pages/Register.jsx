@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { register as registerApi } from '../api/authApi';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useToast } from '../components/Toast';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
@@ -22,16 +23,16 @@ const registerSchema = z.object({
     .regex(/[^A-Za-z0-9]/, 'At least one special character'),
   pan: z
     .string()
-    .transform((v) => v.toUpperCase())
-    .pipe(z.string().regex(PAN_REGEX, 'PAN format: AAAAA0000A'))
-    .or(z.literal(''))
-    .optional(),
+    .optional()
+    .transform((v) => (v ? v.toUpperCase() : ''))
+    .refine((v) => v === '' || PAN_REGEX.test(v), { message: 'PAN format: AAAAA0000A' }),
 });
 
 export default function Register() {
   const { login } = useAuth();
   const { lang } = useLanguage();
   const t = (en, hi) => lang === 'hi' ? hi : en;
+  const { toast } = useToast();
   const navigate = useNavigate();
   const [serverError, setServerError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -47,9 +48,12 @@ export default function Register() {
       const res = await registerApi(payload);
       const { token, user } = res.data?.data || res.data;
       login(token, user);
+      toast.success('Account created successfully!');
       navigate('/');
     } catch (err) {
-      setServerError(err.response?.data?.error || t('Registration failed. Please try again.', 'पंजीकरण विफल।'));
+      const msg = err.response?.data?.error || err.message || '';
+      setServerError(msg || t('Registration failed. Please try again.', 'पंजीकरण विफल।'));
+      console.error('Registration error:', err.response?.status, err.response?.data || err.message);
     } finally {
       setLoading(false);
     }

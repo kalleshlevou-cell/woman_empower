@@ -68,7 +68,7 @@ export default function AdminDashboard() {
           ) : (
             <>
               {/* Stat Cards */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
                 <StatCard
                   title="कुल दान / Total Donations"
                   value={data.totalDonations ?? 0}
@@ -89,6 +89,16 @@ export default function AdminDashboard() {
                   title="प्रकाशित योजनाएं / Published Schemes"
                   value={publishedSchemes}
                   color="text-purple-600"
+                />
+                <StatCard
+                  title="Unique Donors"
+                  value={data.uniqueDonors ?? 0}
+                  color="text-blue-600"
+                />
+                <StatCard
+                  title="Successful Payments"
+                  value={data.successfulDonationsCount ?? 0}
+                  color="text-secondary"
                 />
               </div>
 

@@ -3,10 +3,11 @@ import { useSearchParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import SchemeCard from '../components/SchemeCard';
-import LoadingSpinner from '../components/LoadingSpinner';
 import { getSchemes, checkEligibility } from '../api/schemesApi';
 import { useLanguage } from '../context/LanguageContext';
 import axiosInstance from '../api/axiosInstance';
+import { useToast } from '../components/Toast';
+import { SkeletonGrid } from '../components/SkeletonCard';
 
 const MP_DISTRICTS = [
   'Bhopal', 'Indore', 'Jabalpur', 'Gwalior', 'Ujjain',
@@ -35,6 +36,7 @@ export default function SchemeFinder() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { lang } = useLanguage();
   const t = (en, hi) => lang === 'hi' ? hi : en;
+  const { toast } = useToast();
 
   // Filters
   const [keyword, setKeyword] = useState('');
@@ -142,6 +144,7 @@ export default function SchemeFinder() {
         message: helplineMsg,
       });
       setHelplineSuccess(true);
+      toast.success("We'll call you back shortly");
     } catch {
       // ignore
     } finally {
@@ -366,7 +369,7 @@ export default function SchemeFinder() {
               )}
 
               {loading ? (
-                <LoadingSpinner />
+                <SkeletonGrid />
               ) : schemes.length > 0 ? (
                 <>
                   <p className="text-sm text-gray-500 mb-4">

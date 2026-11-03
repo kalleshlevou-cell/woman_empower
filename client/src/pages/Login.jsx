@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { login as loginApi } from '../api/authApi';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useToast } from '../components/Toast';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
@@ -18,6 +19,7 @@ export default function Login() {
   const { login } = useAuth();
   const { lang } = useLanguage();
   const t = (en, hi) => lang === 'hi' ? hi : en;
+  const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
   const [serverError, setServerError] = useState('');
@@ -33,6 +35,7 @@ export default function Login() {
       const res = await loginApi(data);
       const { token, user } = res.data?.data || res.data;
       login(token, user);
+      toast.success(`Welcome back, ${user.name}!`);
       navigate(user.role === 'admin' ? '/admin' : from, { replace: true });
     } catch (err) {
       setServerError(err.response?.data?.error || t('Login failed. Please try again.', 'लॉगिन विफल। पुनः प्रयास करें।'));

@@ -173,8 +173,8 @@ const verifyPayment = async (req, res, next) => {
       });
     }
 
-    // Send confirmation email (non-blocking, errors are swallowed in emailService)
-    sendDonationConfirmation({
+    // Send confirmation email (await to capture preview URL; errors are swallowed in emailService)
+    const emailPreviewUrl = await sendDonationConfirmation({
       to: donation.donorEmail,
       donorName: donation.donorName,
       receiptNumber,
@@ -185,7 +185,7 @@ const verifyPayment = async (req, res, next) => {
 
     return res.json({
       success: true,
-      data: { receiptNumber, donationId },
+      data: { receiptNumber, donationId, emailPreviewUrl: emailPreviewUrl || null },
     });
   } catch (e) {
     next(e);

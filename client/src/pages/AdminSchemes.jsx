@@ -14,6 +14,7 @@ import {
 } from '../api/adminApi';
 import { formatDate } from '../utils/formatters';
 import { MP_DISTRICTS, SCHEME_NEEDS } from '../utils/constants';
+import { useToast } from '../components/Toast';
 
 const LIMIT = 10;
 
@@ -90,6 +91,7 @@ function SchemeModal({ scheme, onClose, onSaved }) {
   const [serverError, setServerError] = useState('');
   const [savedScheme, setSavedScheme] = useState(isEdit ? scheme : null);
   const [approving, setApproving] = useState(false);
+  const { toast } = useToast();
 
   const defaultValues = {
     title_hi: scheme?.title_hi || '',
@@ -148,6 +150,7 @@ function SchemeModal({ scheme, onClose, onSaved }) {
       const saved = res.data?.data;
       setSavedScheme(saved);
       onSaved();
+      toast.success('Scheme saved successfully');
     } catch (err) {
       setServerError(err.response?.data?.error || 'Save failed.');
     } finally {
@@ -162,6 +165,7 @@ function SchemeModal({ scheme, onClose, onSaved }) {
       const res = await adminApproveDraft(savedScheme._id);
       setSavedScheme(res.data?.data);
       onSaved();
+      toast.success('Hindi summary approved and published');
     } catch {
       // ignore
     } finally {
