@@ -1,5 +1,12 @@
 # EmpowerHer — Deployment Guide
 
+## Live URLs
+| Service | URL |
+|---------|-----|
+| Backend API (Render) | **https://woman-empower.onrender.com** ✅ Live |
+| Frontend (Vercel) | https://woman-empower.vercel.app *(after Vercel deploy)* |
+| GitHub | https://github.com/kalleshlevou-cell/woman_empower |
+
 ## Prerequisites
 
 - **Node.js** ≥ 20.x (https://nodejs.org/)
