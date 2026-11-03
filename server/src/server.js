@@ -18,10 +18,21 @@ const app = express();
 // Connect to MongoDB
 connectDB();
 
-// CORS — allow only the configured client origin
+// CORS — allow configured client origins (comma-separated list supported)
+const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173')
+  .split(',')
+  .map((o) => o.trim());
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: (origin, callback) => {
+      // allow requests with no origin (mobile apps, curl, Render health checks)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      // allow any vercel.app subdomain automatically
+      if (origin.endsWith('.vercel.app')) return callback(null, true);
+      callback(new Error(`CORS: origin ${origin} not allowed`));
+    },
     credentials: true,
   })
 );

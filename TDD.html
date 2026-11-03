@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>EmpowerHer — Technical Design Document</title>
+  <style>
+    @media print {
+      body { font-size: 12px; }
+      h1 { font-size: 22px; }
+      h2 { font-size: 18px; page-break-after: avoid; }
+      h3 { font-size: 15px; page-break-after: avoid; }
+      pre { page-break-inside: avoid; }
+      table { page-break-inside: avoid; }
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      color: #1f2328;
+      line-height: 1.6;
+      font-size: 15px;
+    }
+    h1, h2, h3 { color: #1f2328; }
+    h1 { font-size: 28px; }
+    h2 { font-size: 22px; }
+    h3 { font-size: 17px; margin-top: 24px; }
+    table { font-size: 14px; }
+  </style>
+</head>
+<body>
+<h1 style="border-bottom:2px solid #d0d7de;padding-bottom:10px;">EmpowerHer — Technical Design Document</h1>
+
+<p style="margin:8px 0;line-height:1.6;"><strong>GitHub URL</strong>: <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">https://github.com/kalleshlevou-cell/woman_empower</code></p>
+<p style="margin:8px 0;line-height:1.6;"><strong>Live App URL</strong>: _(add if deployed)_</p>
+
+<hr style="border:none;border-top:1px solid #d0d7de;margin:24px 0;">
+
+<h2 style="border-bottom:1px solid #d0d7de;padding-bottom:8px;margin-top:32px;">1. Overview</h2>
+
+<p style="margin:8px 0;line-height:1.6;">EmpowerHer is a bilingual (Hindi/English) web portal for an NGO focused on women's welfare in Madhya Pradesh. It serves two core purposes:</p>
+
+<ol style="padding-left:24px;"><li><strong>Scheme Finder</strong> — Helps rural women discover and check eligibility for government welfare schemes through a questionnaire-driven, criteria-matching engine.</li><li><strong>Donation Platform</strong> — Enables donors to contribute to NGO campaigns via Razorpay, with automated 80G-compliant tax receipt generation (PDF) and Form 10BD export for IT compliance.</li></ol>
+
+<p style="margin:8px 0;line-height:1.6;">The platform provides a full admin CMS for managing schemes (with AI-draft content review), campaigns, donation reports, and audit logs.</p>
+
+<hr style="border:none;border-top:1px solid #d0d7de;margin:24px 0;">
+
+<h2 style="border-bottom:1px solid #d0d7de;padding-bottom:8px;margin-top:32px;">2. Architecture</h2>
+
+<h3>2.1 Why MERN Stack</h3>
+
+<table style="border-collapse:collapse;width:100%;margin:16px 0;font-size:14px;"><thead><tr><th style="border:1px solid #d0d7de;padding:8px 12px;background:#f6f8fa;text-align:left;">Concern</th><th style="border:1px solid #d0d7de;padding:8px 12px;background:#f6f8fa;text-align:left;">Choice</th><th style="border:1px solid #d0d7de;padding:8px 12px;background:#f6f8fa;text-align:left;">Rationale</th></tr></thead><tbody><tr><td style="border:1px solid #d0d7de;padding:8px 12px;"><strong>Frontend</strong></td><td style="border:1px solid #d0d7de;padding:8px 12px;">React 19 + Vite 8</td><td style="border:1px solid #d0d7de;padding:8px 12px;">Fast HMR for development; component-based architecture suits the bilingual UI with many shared components</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;"><strong>Styling</strong></td><td style="border:1px solid #d0d7de;padding:8px 12px;">Tailwind CSS 3 + Noto Sans Devanagari</td><td style="border:1px solid #d0d7de;padding:8px 12px;">Utility-first CSS for rapid UI; Google Fonts Devanagari support for native Hindi rendering</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;"><strong>Backend</strong></td><td style="border:1px solid #d0d7de;padding:8px 12px;">Express 4 on Node.js</td><td style="border:1px solid #d0d7de;padding:8px 12px;">Lightweight REST API server; rich npm ecosystem for Razorpay, PDFKit, Nodemailer integrations</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;"><strong>Database</strong></td><td style="border:1px solid #d0d7de;padding:8px 12px;">MongoDB Atlas (Mongoose 8)</td><td style="border:1px solid #d0d7de;padding:8px 12px;">Schema-flexible documents suit the variable <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">eligibilityCriteria</code> arrays; free-tier Atlas for easy deployment</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;"><strong>Payments</strong></td><td style="border:1px solid #d0d7de;padding:8px 12px;">Razorpay SDK</td><td style="border:1px solid #d0d7de;padding:8px 12px;">Industry-standard Indian payment gateway with test mode; HMAC signature verification for security</td></tr></tbody></table>
+<h3>2.2 High-Level Architecture</h3>
+
+<pre style="background:#f6f8fa;padding:16px;border-radius:6px;overflow-x:auto;font-size:13px;line-height:1.45;"><code>┌──────────────────┐         ┌───────────────────┐         ┌──────────────┐
+│   React SPA      │  HTTP   │   Express API     │  TCP    │  MongoDB     │
+│   (Vite, :5173)  │ ──────► │   (Node, :5000)   │ ──────► │  Atlas       │
+│                  │  REST   │                   │         │  (empowerher)│
+│  - Hindi/English │ ◄────── │  - Auth (JWT)     │ ◄────── │              │
+│  - Razorpay SDK  │  JSON   │  - Eligibility    │         └──────────────┘
+│  - PDF download  │         │  - Razorpay verify │
+└──────────────────┘         │  - PDF generation  │
+                             │  - Email (SMTP)    │
+                             │  - Cloudinary      │
+                             └───────────────────┘
+</code></pre>
+
+<p style="margin:8px 0;line-height:1.6;"><strong>Assumption</strong>: Razorpay test mode is used throughout. No real money is processed. 80G receipts are for demonstration only.</p>
+
+<h3>2.3 Monorepo Structure</h3>
+
+<p style="margin:8px 0;line-height:1.6;">The project is a monorepo with a root <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">package.json</code> that uses <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">concurrently</code> to run both apps. The server and client are independent npm projects sharing no code.</p>
+
+<pre style="background:#f6f8fa;padding:16px;border-radius:6px;overflow-x:auto;font-size:13px;line-height:1.45;"><code>empowerher/
+├── package.json          # Root: concurrently runs server + client
+├── server/               # Express API
+│   └── src/
+│       ├── config/       # DB connection (with DNS fallback)
+│       ├── models/       # 7 Mongoose models
+│       ├── controllers/  # Business logic (auth, schemes, donations, admin)
+│       ├── routes/       # Express routers
+│       ├── middleware/   # JWT auth, rate limiter, error handler, multer
+│       └── utils/        # PDF generator, email service, eligibility engine, receipt counter
+├── client/               # React SPA
+│   └── src/
+│       ├── api/          # Axios instance + endpoint wrappers
+│       ├── components/   # Navbar, Footer, SchemeCard, CampaignCard, etc.
+│       ├── context/      # AuthContext, LanguageContext
+│       ├── hooks/        # useAuth, useSchemes
+│       ├── pages/        # 13 page components
+│       └── utils/        # Validators, formatters, constants
+└── deployment.md
+</code></pre>
+
+<hr style="border:none;border-top:1px solid #d0d7de;margin:24px 0;">
+
+<h2 style="border-bottom:1px solid #d0d7de;padding-bottom:8px;margin-top:32px;">3. Data Model</h2>
+
+<h3>3.1 Entity-Relationship Overview</h3>
+
+<pre style="background:#f6f8fa;padding:16px;border-radius:6px;overflow-x:auto;font-size:13px;line-height:1.45;"><code>User (1) ──── (N) Donation ──── (1) Campaign
+  │                  │
+  │                  └── receiptNumber (via Counter)
+  │
+  ├── (N) Bookmark ──── (1) Scheme
+  │
+  └── (N) AdminLog   (admin audit trail)
+
+Scheme ──── eligibilityCriteria[] (embedded sub-documents)
+Enquiry ──── optional User, optional Scheme
+</code></pre>
+
+<h3>3.2 Model Details</h3>
+
+<table style="border-collapse:collapse;width:100%;margin:16px 0;font-size:14px;"><thead><tr><th style="border:1px solid #d0d7de;padding:8px 12px;background:#f6f8fa;text-align:left;">Model</th><th style="border:1px solid #d0d7de;padding:8px 12px;background:#f6f8fa;text-align:left;">Key Fields</th><th style="border:1px solid #d0d7de;padding:8px 12px;background:#f6f8fa;text-align:left;">Notes</th></tr></thead><tbody><tr><td style="border:1px solid #d0d7de;padding:8px 12px;"><strong>User</strong></td><td style="border:1px solid #d0d7de;padding:8px 12px;">name, email (unique, lowercase), passwordHash, role (donor/admin), pan, phone, address</td><td style="border:1px solid #d0d7de;padding:8px 12px;">Password hashed via bcrypt (12 rounds) in pre-save hook. PAN validated with regex <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">^[A-Z]{5}[0-9]{4}[A-Z]$</code>. DPDP: PAN/email/phone retained per 80G (7 years).</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;"><strong>Scheme</strong></td><td style="border:1px solid #d0d7de;padding:8px 12px;">title_hi, title_en, description_hi/en, aiDraft_hi, aiDraftApproved, need (enum), state, districts[], eligibilityCriteria[], benefits, documents[], applicationProcess, officialUrl, lastCheckedAt, helpCentre, status (draft/published)</td><td style="border:1px solid #d0d7de;padding:8px 12px;">Indexed on <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">{need, state, status}</code>. eligibilityCriteria uses <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">{field, operator, value}</code> sub-documents with operators: eq, gte, lte, includes, bool.</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;"><strong>Campaign</strong></td><td style="border:1px solid #d0d7de;padding:8px 12px;">title, description, targetAmount (paise), raisedAmount (paise), image (Cloudinary URL), status (active/closed), startDate, endDate</td><td style="border:1px solid #d0d7de;padding:8px 12px;">All monetary values stored as integer paise.</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;"><strong>Donation</strong></td><td style="border:1px solid #d0d7de;padding:8px 12px;">donorId (nullable for guests), campaignId, amount (paise), paymentStatus (pending/success/failed), razorpayOrderId/PaymentId/Signature, pan, donorName/Email/Phone/Address, receiptNumber (unique sparse), isMonthly</td><td style="border:1px solid #d0d7de;padding:8px 12px;">Razorpay fields stored for audit. Receipt number generated atomically via Counter model.</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;"><strong>Counter</strong></td><td style="border:1px solid #d0d7de;padding:8px 12px;">_id (string key), seq (auto-increment)</td><td style="border:1px solid #d0d7de;padding:8px 12px;">Single-row pattern. Only <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">getNextReceiptNumber()</code> in <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">receiptCounter.js</code> may generate receipt numbers — format: <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">RCP-{year}-{seq padded to 6}</code>.</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;"><strong>Bookmark</strong></td><td style="border:1px solid #d0d7de;padding:8px 12px;">userId, schemeId</td><td style="border:1px solid #d0d7de;padding:8px 12px;">Compound unique index prevents duplicates.</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;"><strong>Enquiry</strong></td><td style="border:1px solid #d0d7de;padding:8px 12px;">userId (nullable), schemeId (nullable), message, status (open/closed)</td><td style="border:1px solid #d0d7de;padding:8px 12px;">For helpline callback requests.</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;"><strong>AdminLog</strong></td><td style="border:1px solid #d0d7de;padding:8px 12px;">adminId, action, entityType, entityId, details (Mixed), timestamp</td><td style="border:1px solid #d0d7de;padding:8px 12px;">Every admin mutation logs an entry.</td></tr></tbody></table>
+<p style="margin:8px 0;line-height:1.6;"><strong>Assumption</strong>: Money is always stored as integer paise (₹1 = 100 paise) to avoid floating-point rounding errors. Conversion to rupees happens only at display/export time.</p>
+
+<hr style="border:none;border-top:1px solid #d0d7de;margin:24px 0;">
+
+<h2 style="border-bottom:1px solid #d0d7de;padding-bottom:8px;margin-top:32px;">4. Main Flows</h2>
+
+<h3>4.1 Scheme Discovery + Eligibility Check</h3>
+
+<pre style="background:#f6f8fa;padding:16px;border-radius:6px;overflow-x:auto;font-size:13px;line-height:1.45;"><code>User opens /schemes
+    │
+    ├── Filter by keyword, need, district, type
+    │   └── GET /api/schemes?q=...&need=pension&district=Bhopal
+    │       └── Server filters {status: 'published'}, paginated response
+    │
+    └── Fill eligibility questionnaire (maritalStatus, age, bplCard, pregnant, shmMember)
+        └── POST /api/schemes/eligibility {answers}
+            └── Server loads all published schemes
+            └── Calls eligibilityEngine.matchSchemes(answers, schemes)
+                └── Pure function: AND logic on each scheme's eligibilityCriteria[]
+                └── Returns matching schemes with matchLabel: 'संभावित मिलान'
+</code></pre>
+
+<p style="margin:8px 0;line-height:1.6;"><strong>Assumption</strong>: The eligibility engine uses AND logic — ALL criteria must match. A scheme with no criteria never matches. This is a deterministic rule-based engine, not ML.</p>
+
+<h3>4.2 Donation + Payment Flow</h3>
+
+<pre style="background:#f6f8fa;padding:16px;border-radius:6px;overflow-x:auto;font-size:13px;line-height:1.45;"><code>Step 1: Select Campaign + Amount
+    │
+Step 2: Enter Donor Details (name, email, phone, PAN, address, privacy consent)
+    │   └── POST /api/donations/create-order
+    │       └── Joi validation (amount ≥ ₹500 = 50000 paise, PAN regex, privacy=true)
+    │       └── razorpay.orders.create({amount, currency: 'INR'})
+    │       └── Save Donation with paymentStatus: 'pending'
+    │       └── Return {orderId, amount, razorpayKeyId}
+    │
+Step 3: Razorpay Checkout (client-side SDK)
+    │   └── On success callback:
+    │       └── POST /api/donations/verify {razorpayOrderId, razorpayPaymentId, razorpaySignature}
+    │           └── HMAC-SHA256 signature verification (server-side only, using crypto.createHmac)
+    │           └── Foreign card check (razorpay.payments.fetch → international flag)
+    │           └── Generate receipt number via Counter (atomic findOneAndUpdate $inc)
+    │           └── Generate 80G PDF via PDFKit (Trust PAN, donor PAN, amount in words)
+    │           └── Update Donation: paymentStatus='success', receiptNumber
+    │           └── Atomically increment Campaign.raisedAmount
+    │           └── Send email with PDF attachment (Ethereal in dev)
+    │           └── Return {receiptNumber, donationId}
+    │
+    └── Client shows success screen + Download Receipt button
+</code></pre>
+
+<p style="margin:8px 0;line-height:1.6;"><strong>Key security decision</strong>: The Razorpay signature is verified exclusively on the server using <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">crypto.createHmac</code>. The frontend never trusts its own payment success — it always waits for the server's verification response.</p>
+
+<h3>4.3 Admin CMS — Scheme Management with AI Draft</h3>
+
+<pre style="background:#f6f8fa;padding:16px;border-radius:6px;overflow-x:auto;font-size:13px;line-height:1.45;"><code>Admin creates scheme (POST /api/admin/schemes)
+    └── Server auto-generates aiDraft_hi (mock: hardcoded Hindi string)
+    └── aiDraftApproved = false
+    └── Admin sees yellow "AI Draft - समीक्षा करें" badge
+
+Admin reviews and clicks "Approve AI Draft"
+    └── POST /api/admin/schemes/:id/approve-draft
+    └── aiDraftApproved = true
+    └── Badge turns green "Approved"
+
+Admin publishes scheme (PUT /api/admin/schemes/:id {status: 'published'})
+    └── Scheme appears on public /schemes page
+    └── If aiDraftApproved is still false, SchemeDetail shows warning banner
+</code></pre>
+
+<p style="margin:8px 0;line-height:1.6;"><strong>Assumption</strong>: The AI draft is currently mocked with a hardcoded Hindi paragraph (<code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">"यह एक AI-निर्मित मसौदा है। कृपया समीक्षा करें और अनुमोदित करें।"</code>). In production, this would be replaced with a Gemini/OpenAI API call to generate a Hindi summary from the English description. The admin approval workflow is fully functional regardless.</p>
+
+<hr style="border:none;border-top:1px solid #d0d7de;margin:24px 0;">
+
+<h2 style="border-bottom:1px solid #d0d7de;padding-bottom:8px;margin-top:32px;">5. How the AI Part Works</h2>
+
+<h3>Current Implementation (Mock)</h3>
+
+<p style="margin:8px 0;line-height:1.6;">When an admin creates a new scheme via <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">POST /api/admin/schemes</code>, the server auto-populates the <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">aiDraft_hi</code> field with a hardcoded Hindi string simulating AI-generated content. The <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">aiDraftApproved</code> flag is set to <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">false</code>.</p>
+
+<p style="margin:8px 0;line-height:1.6;">This creates a <strong>human-in-the-loop review workflow</strong>:</p>
+<ol style="padding-left:24px;"><li>AI generates a Hindi draft (mocked)</li><li>Admin reviews the draft in the CMS (shown in a read-only text area with a yellow "AI Draft" badge)</li><li>Admin either approves (badge turns green) or edits before publishing</li><li>Public users see a warning banner on unapproved drafts</li></ol>
+
+<h3>Production Path</h3>
+
+<p style="margin:8px 0;line-height:1.6;">To integrate real AI, replace the hardcoded string in <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">adminController.js</code> line 102 with:</p>
+
+<pre style="background:#f6f8fa;padding:16px;border-radius:6px;overflow-x:auto;font-size:13px;line-height:1.45;"><code>const { GoogleGenerativeAI } = require('@google/generative-ai');
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+const result = await model.generateContent(
+  `Summarize this government scheme in simple Hindi for rural women: ${req.body.description_en}`
+);
+scheme.aiDraft_hi = result.response.text();
+</code></pre>
+
+<p style="margin:8px 0;line-height:1.6;">The approval workflow, badge UI, and admin review process remain unchanged — only the content source changes.</p>
+
+<p style="margin:8px 0;line-height:1.6;"><strong>Assumption</strong>: The AI draft is labelled as mock/simulated in all cases. The approval workflow (the real value) is fully implemented.</p>
+
+<hr style="border:none;border-top:1px solid #d0d7de;margin:24px 0;">
+
+<h2 style="border-bottom:1px solid #d0d7de;padding-bottom:8px;margin-top:32px;">6. UI and Design Decisions</h2>
+
+<h3>6.1 Design Language</h3>
+
+<table style="border-collapse:collapse;width:100%;margin:16px 0;font-size:14px;"><thead><tr><th style="border:1px solid #d0d7de;padding:8px 12px;background:#f6f8fa;text-align:left;">Decision</th><th style="border:1px solid #d0d7de;padding:8px 12px;background:#f6f8fa;text-align:left;">Choice</th><th style="border:1px solid #d0d7de;padding:8px 12px;background:#f6f8fa;text-align:left;">Why</th></tr></thead><tbody><tr><td style="border:1px solid #d0d7de;padding:8px 12px;"><strong>Primary colour</strong></td><td style="border:1px solid #d0d7de;padding:8px 12px;">Saffron <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">#F5A623</code></td><td style="border:1px solid #d0d7de;padding:8px 12px;">Indian cultural association; used for backgrounds/accents, never for body text (fails WCAG contrast on white)</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;"><strong>Secondary colour</strong></td><td style="border:1px solid #d0d7de;padding:8px 12px;">Green <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">#2D7D46</code></td><td style="border:1px solid #d0d7de;padding:8px 12px;">Trustworthy, action-oriented; used for all CTA buttons; passes WCAG AA on white</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;"><strong>Typography</strong></td><td style="border:1px solid #d0d7de;padding:8px 12px;">Noto Sans Devanagari (Google Fonts)</td><td style="border:1px solid #d0d7de;padding:8px 12px;">Native Hindi rendering; 400–700 weights for hierarchy</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;"><strong>Layout</strong></td><td style="border:1px solid #d0d7de;padding:8px 12px;">Mobile-first responsive (Tailwind breakpoints)</td><td style="border:1px solid #d0d7de;padding:8px 12px;">Target users are rural women likely on mobile</td></tr></tbody></table>
+<h3>6.2 Key Screens</h3>
+
+<p style="margin:8px 0;line-height:1.6;"><strong>Home Page</strong> — Hero strip (120px, saffron gradient) → Quick scheme finder (need cards + district dropdown, above the fold) → Featured schemes (3 cards) → Campaigns → Impact stats (animated counters) → Testimonials → Footer. The scheme finder is intentionally placed above the fold because it's the primary user action.</p>
+
+<p style="margin:8px 0;line-height:1.6;"><strong>Scheme Finder</strong> — Two-panel layout: left sidebar with filters + collapsible eligibility questionnaire (6 questions in Hindi), right panel with paginated scheme cards. Matched schemes get a "संभावित मिलान" (possible match) badge. This design lets users filter and check eligibility simultaneously.</p>
+
+<p style="margin:8px 0;line-height:1.6;"><strong>Donation Flow</strong> — 3-step wizard (Campaign → Details → Payment) with step indicator. Step 2 includes DPDP privacy notice and mandatory consent checkbox. Step 3 shows a permanent red "🔴 TEST MODE" banner. This was chosen over a single-page form to reduce cognitive load for Hindi-speaking users.</p>
+
+<p style="margin:8px 0;line-height:1.6;"><strong>Admin Dashboard</strong> — Stat cards (total donations, amount raised, active campaigns, published schemes) + campaign-wise bar chart + quick navigation links. Admin CMS pages for schemes, campaigns, donations, and logs.</p>
+
+<h3>6.3 Accessibility (WCAG 2.1 AA)</h3>
+
+<p style="margin:8px 0;line-height:1.6;">- All navigation has <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">role="navigation"</code>, <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">aria-label</code></p>
+<p style="margin:8px 0;line-height:1.6;">- Form fields have explicit <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;"><label></code> with <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">htmlFor</code>; errors linked via <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">aria-describedby</code></p>
+<p style="margin:8px 0;line-height:1.6;">- Focus rings visible (<code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">focus:ring-2</code>)</p>
+<p style="margin:8px 0;line-height:1.6;">- Progress bars have <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">aria-valuenow</code>/<code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">aria-valuemin</code>/<code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">aria-valuemax</code></p>
+<p style="margin:8px 0;line-height:1.6;">- Language toggle announces change via context</p>
+<p style="margin:8px 0;line-height:1.6;">- Colour contrast: saffron used only for decorative backgrounds; green <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">#2D7D46</code> used for actionable text/buttons</p>
+
+<p style="margin:8px 0;line-height:1.6;"><strong>Assumption</strong>: Full WCAG certification requires assistive technology testing. The implementation covers keyboard navigation, focus management, semantic HTML, and ARIA attributes.</p>
+
+<hr style="border:none;border-top:1px solid #d0d7de;margin:24px 0;">
+
+<h2 style="border-bottom:1px solid #d0d7de;padding-bottom:8px;margin-top:32px;">7. What We Cut and What We Would Do Next</h2>
+
+<h3>Cut (labelled assumptions)</h3>
+
+<table style="border-collapse:collapse;width:100%;margin:16px 0;font-size:14px;"><thead><tr><th style="border:1px solid #d0d7de;padding:8px 12px;background:#f6f8fa;text-align:left;">Feature</th><th style="border:1px solid #d0d7de;padding:8px 12px;background:#f6f8fa;text-align:left;">Status</th><th style="border:1px solid #d0d7de;padding:8px 12px;background:#f6f8fa;text-align:left;">Reason</th></tr></thead><tbody><tr><td style="border:1px solid #d0d7de;padding:8px 12px;">Real AI content generation</td><td style="border:1px solid #d0d7de;padding:8px 12px;">Mocked with hardcoded Hindi string</td><td style="border:1px solid #d0d7de;padding:8px 12px;">API key + cost constraints; approval workflow is fully functional</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;">Real payment processing</td><td style="border:1px solid #d0d7de;padding:8px 12px;">Razorpay test mode only</td><td style="border:1px solid #d0d7de;padding:8px 12px;">Production keys require business verification</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;">Real email delivery</td><td style="border:1px solid #d0d7de;padding:8px 12px;">Ethereal test account in dev</td><td style="border:1px solid #d0d7de;padding:8px 12px;">SMTP credentials needed for production</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;">Cloudinary image uploads</td><td style="border:1px solid #d0d7de;padding:8px 12px;">Falls back to local <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">uploads/</code> folder</td><td style="border:1px solid #d0d7de;padding:8px 12px;">Works without Cloudinary keys configured</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;">Hindi numeral conversion in PDF</td><td style="border:1px solid #d0d7de;padding:8px 12px;">English words only (<code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">amountToWords</code>)</td><td style="border:1px solid #d0d7de;padding:8px 12px;">Full Hindi localization out of scope</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;">Multi-language i18n library</td><td style="border:1px solid #d0d7de;padding:8px 12px;">Simple React context toggle</td><td style="border:1px solid #d0d7de;padding:8px 12px;"><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">react-i18next</code> would be used for 3+ languages</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;">Automated testing</td><td style="border:1px solid #d0d7de;padding:8px 12px;">No unit/integration tests</td><td style="border:1px solid #d0d7de;padding:8px 12px;">Time constraint; would add Jest + Supertest + React Testing Library</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;">Rate limiting on registration</td><td style="border:1px solid #d0d7de;padding:8px 12px;">Only on login (10 req/15 min)</td><td style="border:1px solid #d0d7de;padding:8px 12px;">Could be added for abuse prevention</td></tr></tbody></table>
+<h3>What We Would Do Next</h3>
+
+<ol style="padding-left:24px;"><li><strong>Real Gemini AI integration</strong> — Replace mock draft with Gemini API call for Hindi scheme summaries</li><li><strong>Automated tests</strong> — Jest + Supertest for API, React Testing Library for components, Playwright for E2E</li><li><strong>Deployment</strong> — CI/CD pipeline with GitHub Actions → Render/Railway</li><li><strong>Production email</strong> — Replace Ethereal with SendGrid/Mailgun</li><li><strong>Encryption at rest</strong> — Encrypt PAN fields in MongoDB using Mongoose field-level encryption (DPDP compliance)</li><li><strong>Analytics dashboard</strong> — Real-time donation tracking, district-wise scheme usage heatmap</li><li><strong>PWA support</strong> — Offline scheme viewing for areas with poor connectivity</li><li><strong>SMS notifications</strong> — Twilio integration for scheme eligibility alerts (critical for rural users without email)</li></ol>
+
+<hr style="border:none;border-top:1px solid #d0d7de;margin:24px 0;">
+
+<h2 style="border-bottom:1px solid #d0d7de;padding-bottom:8px;margin-top:32px;">8. API Endpoints Summary</h2>
+
+<h3>Public</h3>
+
+<table style="border-collapse:collapse;width:100%;margin:16px 0;font-size:14px;"><thead><tr><th style="border:1px solid #d0d7de;padding:8px 12px;background:#f6f8fa;text-align:left;">Method</th><th style="border:1px solid #d0d7de;padding:8px 12px;background:#f6f8fa;text-align:left;">Endpoint</th><th style="border:1px solid #d0d7de;padding:8px 12px;background:#f6f8fa;text-align:left;">Purpose</th></tr></thead><tbody><tr><td style="border:1px solid #d0d7de;padding:8px 12px;">POST</td><td style="border:1px solid #d0d7de;padding:8px 12px;"><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">/api/auth/register</code></td><td style="border:1px solid #d0d7de;padding:8px 12px;">Create donor account</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;">POST</td><td style="border:1px solid #d0d7de;padding:8px 12px;"><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">/api/auth/login</code></td><td style="border:1px solid #d0d7de;padding:8px 12px;">Login (rate-limited: 10/15min)</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;">GET</td><td style="border:1px solid #d0d7de;padding:8px 12px;"><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">/api/auth/me</code></td><td style="border:1px solid #d0d7de;padding:8px 12px;">Get current user (protected)</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;">GET</td><td style="border:1px solid #d0d7de;padding:8px 12px;"><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">/api/schemes</code></td><td style="border:1px solid #d0d7de;padding:8px 12px;">List published schemes (paginated, filterable)</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;">GET</td><td style="border:1px solid #d0d7de;padding:8px 12px;"><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">/api/schemes/:id</code></td><td style="border:1px solid #d0d7de;padding:8px 12px;">Get single scheme</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;">POST</td><td style="border:1px solid #d0d7de;padding:8px 12px;"><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">/api/schemes/eligibility</code></td><td style="border:1px solid #d0d7de;padding:8px 12px;">Check eligibility against all schemes</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;">POST</td><td style="border:1px solid #d0d7de;padding:8px 12px;"><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">/api/schemes/:id/bookmark</code></td><td style="border:1px solid #d0d7de;padding:8px 12px;">Bookmark a scheme (protected)</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;">GET</td><td style="border:1px solid #d0d7de;padding:8px 12px;"><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">/api/schemes/bookmarks</code></td><td style="border:1px solid #d0d7de;padding:8px 12px;">Get user's bookmarks (protected)</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;">GET</td><td style="border:1px solid #d0d7de;padding:8px 12px;"><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">/api/campaigns</code></td><td style="border:1px solid #d0d7de;padding:8px 12px;">List active campaigns</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;">POST</td><td style="border:1px solid #d0d7de;padding:8px 12px;"><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">/api/donations/create-order</code></td><td style="border:1px solid #d0d7de;padding:8px 12px;">Create Razorpay order</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;">POST</td><td style="border:1px solid #d0d7de;padding:8px 12px;"><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">/api/donations/verify</code></td><td style="border:1px solid #d0d7de;padding:8px 12px;">Verify payment signature</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;">GET</td><td style="border:1px solid #d0d7de;padding:8px 12px;"><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">/api/donations/my</code></td><td style="border:1px solid #d0d7de;padding:8px 12px;">Get user's donations (protected)</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;">GET</td><td style="border:1px solid #d0d7de;padding:8px 12px;"><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">/api/donations/:id/receipt</code></td><td style="border:1px solid #d0d7de;padding:8px 12px;">Download receipt PDF (protected)</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;">POST</td><td style="border:1px solid #d0d7de;padding:8px 12px;"><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">/api/enquiries</code></td><td style="border:1px solid #d0d7de;padding:8px 12px;">Submit helpline callback request</td></tr></tbody></table>
+<h3>Admin (protected + admin role)</h3>
+
+<table style="border-collapse:collapse;width:100%;margin:16px 0;font-size:14px;"><thead><tr><th style="border:1px solid #d0d7de;padding:8px 12px;background:#f6f8fa;text-align:left;">Method</th><th style="border:1px solid #d0d7de;padding:8px 12px;background:#f6f8fa;text-align:left;">Endpoint</th><th style="border:1px solid #d0d7de;padding:8px 12px;background:#f6f8fa;text-align:left;">Purpose</th></tr></thead><tbody><tr><td style="border:1px solid #d0d7de;padding:8px 12px;">GET</td><td style="border:1px solid #d0d7de;padding:8px 12px;"><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">/api/admin/dashboard</code></td><td style="border:1px solid #d0d7de;padding:8px 12px;">Aggregated stats</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;">GET/POST</td><td style="border:1px solid #d0d7de;padding:8px 12px;"><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">/api/admin/schemes</code></td><td style="border:1px solid #d0d7de;padding:8px 12px;">List/Create schemes</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;">PUT/DELETE</td><td style="border:1px solid #d0d7de;padding:8px 12px;"><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">/api/admin/schemes/:id</code></td><td style="border:1px solid #d0d7de;padding:8px 12px;">Update/Soft-delete scheme</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;">POST</td><td style="border:1px solid #d0d7de;padding:8px 12px;"><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">/api/admin/schemes/:id/approve-draft</code></td><td style="border:1px solid #d0d7de;padding:8px 12px;">Approve AI draft</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;">GET/POST</td><td style="border:1px solid #d0d7de;padding:8px 12px;"><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">/api/admin/campaigns</code></td><td style="border:1px solid #d0d7de;padding:8px 12px;">List/Create campaigns</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;">PUT</td><td style="border:1px solid #d0d7de;padding:8px 12px;"><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">/api/admin/campaigns/:id</code></td><td style="border:1px solid #d0d7de;padding:8px 12px;">Update campaign</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;">GET</td><td style="border:1px solid #d0d7de;padding:8px 12px;"><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">/api/admin/donations</code></td><td style="border:1px solid #d0d7de;padding:8px 12px;">List donations (filterable)</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;">GET</td><td style="border:1px solid #d0d7de;padding:8px 12px;"><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">/api/admin/donations/export-csv</code></td><td style="border:1px solid #d0d7de;padding:8px 12px;">Stream CSV export</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;">GET</td><td style="border:1px solid #d0d7de;padding:8px 12px;"><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">/api/admin/donations/form10bd</code></td><td style="border:1px solid #d0d7de;padding:8px 12px;">Stream Form 10BD CSV</td></tr><tr><td style="border:1px solid #d0d7de;padding:8px 12px;">GET</td><td style="border:1px solid #d0d7de;padding:8px 12px;"><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">/api/admin/logs</code></td><td style="border:1px solid #d0d7de;padding:8px 12px;">View audit logs</td></tr></tbody></table>
+<hr style="border:none;border-top:1px solid #d0d7de;margin:24px 0;">
+
+<h2 style="border-bottom:1px solid #d0d7de;padding-bottom:8px;margin-top:32px;">9. Security Measures</h2>
+
+<p style="margin:8px 0;line-height:1.6;">- <strong>Authentication</strong>: JWT (7-day expiry) with bcrypt password hashing (12 rounds)</p>
+<p style="margin:8px 0;line-height:1.6;">- <strong>Authorization</strong>: Role-based (donor/admin) with middleware guards</p>
+<p style="margin:8px 0;line-height:1.6;">- <strong>Payment verification</strong>: Server-side HMAC-SHA256 signature check — frontend never trusted</p>
+<p style="margin:8px 0;line-height:1.6;">- <strong>Rate limiting</strong>: Login endpoint (10 requests / 15 minutes)</p>
+<p style="margin:8px 0;line-height:1.6;">- <strong>Input validation</strong>: Joi on server, Zod on client (PAN regex, email, phone, amount)</p>
+<p style="margin:8px 0;line-height:1.6;">- <strong>CORS</strong>: Origin restricted to configured CLIENT_URL</p>
+<p style="margin:8px 0;line-height:1.6;">- <strong>Foreign card blocking</strong>: Razorpay's <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:0.9em;">international</code> flag checked server-side</p>
+<p style="margin:8px 0;line-height:1.6;">- <strong>DPDP compliance</strong>: Comments on every model/controller handling personal data; privacy consent required before donation</p>
+<p style="margin:8px 0;line-height:1.6;">- <strong>Soft deletes</strong>: Schemes are set to 'draft' status, never hard-deleted</p>
+<p style="margin:8px 0;line-height:1.6;">- <strong>Audit trail</strong>: Every admin mutation logged to AdminLog collection</p>
+<p style="margin:8px 0;line-height:1.6;">- <strong>CSV streaming</strong>: Uses Mongoose cursor to avoid loading all records into memory</p>
+
+</body>
+</html>

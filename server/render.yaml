@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: empowerher-api
+    runtime: node
+    rootDir: server
+    buildCommand: npm install
+    startCommand: node src/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: TRUST_NAME
+        sync: false
+      - key: TRUST_PAN
+        sync: false
+      - key: TRUST_80G_REG
+        sync: false
+      - key: CLIENT_URL
+        sync: false
