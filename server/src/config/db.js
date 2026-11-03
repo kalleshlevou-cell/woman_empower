@@ -1,4 +1,9 @@
 const mongoose = require('mongoose');
+const dns = require('node:dns');
+
+// Use Google public DNS so SRV lookups work even when the local
+// router DNS does not support SRV records.
+dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 let _memServer = null;
 
@@ -121,13 +126,13 @@ async function autoSeed() {
 
     // Campaigns
     await Campaign.findOneAndUpdate(
-      { title: 'वार्षिक स्वास्थ्य शिविर 2026' },
-      { title: 'वार्षिक स्वास्थ्य शिविर 2026', description: 'Annual health camp for women in rural MP', targetAmount: 50000000, raisedAmount: 18500000, status: 'active' },
+      { title: 'Annual Health Camp 2026' },
+      { title: 'Annual Health Camp 2026', description: 'Annual health camp for women in rural Madhya Pradesh', targetAmount: 50000000, raisedAmount: 18500000, status: 'active' },
       { upsert: true, new: true }
     );
     await Campaign.findOneAndUpdate(
-      { title: 'बालिका शिक्षा अभियान' },
-      { title: 'बालिका शिक्षा अभियान', description: 'Education support for girls in 9 districts', targetAmount: 30000000, raisedAmount: 9200000, status: 'active' },
+      { title: 'Girl Child Education Drive' },
+      { title: 'Girl Child Education Drive', description: 'Education support for girls across 9 districts of MP', targetAmount: 30000000, raisedAmount: 9200000, status: 'active' },
       { upsert: true, new: true }
     );
 
