@@ -6,7 +6,7 @@ import { useLanguage } from '../context/LanguageContext';
 const navLinks = [
   { hi: 'योजनाएँ', en: 'Schemes', href: '/schemes' },
   { hi: 'दान करें', en: 'Donate', href: '/donate' },
-  { hi: 'हमारे बारे में', en: 'About', href: '#about' },
+  { hi: 'हमारे बारे में', en: 'About', href: '/about' },
 ];
 
 export default function Navbar() {

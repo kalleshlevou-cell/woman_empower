@@ -33,6 +33,11 @@ export default function Footer() {
             <h4 className="text-white font-semibold mb-2">Links</h4>
             <ul className="text-sm space-y-1">
               <li>
+                <Link to="/about" className="hover:text-primary transition-colors">
+                  हमारे बारे में / About
+                </Link>
+              </li>
+              <li>
                 <Link to="/schemes" className="hover:text-primary transition-colors">
                   योजनाएँ / Schemes
                 </Link>
